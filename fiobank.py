@@ -18,14 +18,6 @@ def coerce_date(value):
         return datetime.strptime(value[:10], '%Y-%m-%d').date()
 
 
-def sort_person_names(value):
-    if ',' in value:
-        parts = value.split(',')
-        parts.reverse()
-        return ' '.join(parts).strip()
-    return value
-
-
 def sanitize_value(value, convert=None):
     if isinstance(value, basestring):
         value = value.strip() or None
@@ -50,9 +42,6 @@ class Transaction(dict):
 
         if 'date' in self:
             self['date'] = coerce_date(self['date'])
-
-        if 'executor' in self:
-            self['executor'] = sort_person_names(self['executor'])
 
         if 'account_number' in self and 'bank_code' in self:
             self['account_number_full'] = (self['account_number'] +
