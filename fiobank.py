@@ -116,8 +116,8 @@ class FioBank(object):
                 trans[field_name] = value
 
             # make some refinements
-            is_amount = self._amount_re.match(trans['specification'])
-            if 'specification' in trans and is_amount:
+            is_amount = self._amount_re.match
+            if 'specification' in trans and is_amount(trans['specification']):
                 amount, currency = trans['specification'].split(' ')
                 trans['original_amount'] = float(amount)
                 trans['original_currency'] = currency
