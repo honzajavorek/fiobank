@@ -26,37 +26,6 @@ def sanitize_value(value, convert=None):
     return value
 
 
-def is_amount(value):
-    return bool(re.match(r'\-?[\d+](\.\d+)? [A-Z]{3}', value))
-
-
-class Transaction(dict):
-
-    def __init__(self, *args, **kwargs):
-        super(Transaction, self).__init__(*args, **kwargs)
-
-        if 'specification' in self and is_amount(self['specification']):
-            amount, currency = self['specification'].split(' ')
-            self['original_amount'] = float(amount)
-            self['original_currency'] = currency
-
-        if 'date' in self:
-            self['date'] = coerce_date(self['date'])
-
-        if 'account_number' in self and 'bank_code' in self:
-            self['account_number_full'] = (self['account_number'] +
-                                           '/' + self['bank_code'])
-
-
-class Info(dict):
-
-    def __init__(self, *args, **kwargs):
-        super(Info, self).__init__(*args, **kwargs)
-
-        self['account_number_full'] = (self['account_number'] +
-                                       '/' + self['bank_code'])
-
-
 class FioBank(object):
 
     base_url = 'https://www.fio.cz/ib_api/rest/'
@@ -100,6 +69,8 @@ class FioBank(object):
         u'closingBalance': ('balance', float),
     }
 
+    _amount_re = re.compile(r'\-?[\d+](\.\d+)? [A-Z]{3}')
+
     def __init__(self, token):
         self.token = token
 
@@ -115,27 +86,51 @@ class FioBank(object):
         return None
 
     def _parse_info(self, data):
-        input_data = {}
+        # parse data from API
+        info = {}
         for key, value in data['accountStatement']['info'].items():
             if key in self.info_schema:
                 field_name, type_ = self.info_schema[key]
                 value = sanitize_value(value, type_)
-                input_data[field_name] = value
-        return Info(input_data)
+                info[field_name] = value
+
+        # make some refinements
+        info['account_number_full'] = (info['account_number'] +
+                                       '/' + info['bank_code'])
+
+        # return data
+        return info
 
     def _parse_transactions(self, data):
         schema = self.transaction_schema
         entries = data['accountStatement']['transactionList']['transaction']
 
         for entry in entries:
-            input_data = {}
+            # parse entry from API
+            trans = {}
             for column_name, column_data in entry.items():
                 if not column_data:
                     continue
                 field_name, type_ = schema[column_data['name']]
                 value = sanitize_value(column_data['value'], type_)
-                input_data[field_name] = value
-            yield Transaction(input_data)
+                trans[field_name] = value
+
+            # make some refinements
+            is_amount = self._amount_re.match(trans['specification'])
+            if 'specification' in trans and is_amount:
+                amount, currency = trans['specification'].split(' ')
+                trans['original_amount'] = float(amount)
+                trans['original_currency'] = currency
+
+            if 'date' in trans:
+                trans['date'] = coerce_date(trans['date'])
+
+            if 'account_number' in trans and 'bank_code' in trans:
+                trans['account_number_full'] = (trans['account_number'] +
+                                                '/' + trans['bank_code'])
+
+            # generate transaction data
+            yield trans
 
     def info(self):
         today = date.today()
