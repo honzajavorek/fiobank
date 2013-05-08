@@ -38,7 +38,7 @@ Listing latest transactions:
     >>> client.last(from_id='...')  # sets cursor to given transaction_id and returns following transactions
     >>> client.last(from_date='2013-03-01')  # sets cursor to given date and returns following transactions
 
-For further information read code.
+For further information [read code](https://github.com/honzajavorek/fiobank/blob/master/fiobank.py).
 
 
 ## License: ISC
