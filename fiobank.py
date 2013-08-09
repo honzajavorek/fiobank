@@ -103,7 +103,10 @@ class FioBank(object):
 
     def _parse_transactions(self, data):
         schema = self.transaction_schema
-        entries = data['accountStatement']['transactionList']['transaction']
+        try:
+            entries = data['accountStatement']['transactionList']['transaction']
+        except TypeError:
+            entries = []
 
         for entry in entries:
             # parse entry from API
