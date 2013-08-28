@@ -135,22 +135,31 @@ class FioBank(object):
             # generate transaction data
             yield trans
 
+    def _parse_statement(self, data, with_info):
+        if with_info:
+            return {
+                'info': self._parse_info(data),
+                'transactions': self._parse_transactions(data)
+            }
+        else:
+            return self._parse_transactions(data)
+
     def info(self):
         today = date.today()
         data = self._request('periods', from_date=today, to_date=today)
         return self._parse_info(data)
 
-    def period(self, from_date, to_date):
+    def period(self, from_date, to_date, with_info=False):
         data = self._request('periods',
                              from_date=coerce_date(from_date),
                              to_date=coerce_date(to_date))
-        return self._parse_transactions(data)
+        return self._parse_statement(data, with_info)
 
-    def statement(self, year, number):
+    def statement(self, year, number, with_info=False):
         data = self._request('by-id', year=year, number=number)
-        return self._parse_transactions(data)
+        return self._parse_statement(data, with_info)
 
-    def last(self, from_id=None, from_date=None):
+    def last(self, from_id=None, from_date=None, with_info=False):
         assert not (from_id and from_date), "Only one constraint is allowed."
 
         if from_id:
@@ -158,4 +167,4 @@ class FioBank(object):
         elif from_date:
             self._request('set-last-date', from_date=coerce_date(from_date))
 
-        return self._parse_transactions(self._request('last'))
+        return self._parse_statement(self._request('last'), with_info)

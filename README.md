@@ -36,6 +36,13 @@ Listing transactions within time period:
 {'comment': u'N\xe1kup: IKEA CR, BRNO, CZ, dne 17.1.2013, \u010d\xe1stka  2769.00 CZK', 'recipient_message': u'N\xe1kup: IKEA CR, BRNO, CZ, dne 17.1.2013, \u010d\xe1stka  2769.00 CZK', 'user_identifiaction': u'N\xe1kup: IKEA CR, BRNO, CZ, dne 17.1.2013, \u010d\xe1stka  2769.00 CZK', 'currency': 'CZK', 'amount': -2769.0, 'instruction_id': 'XXXXXXXXXX', 'executor': u'Vilém Fusek', 'date': datetime.date(2013, 1, 20), 'type': u'Platba kartou', 'transaction_id': 'XXXXXXXXXX'}
 ```
 
+Getting transactions with account information in one request:
+
+```python
+>>> client.period('2013-01-20', '2013-03-20', with_info=True)
+{'info': {'currency': 'CZK', 'account_number_full': 'XXXXXXXXXX/2010', 'balance': 42.00, 'account_number': 'XXXXXXXXXX', 'bank_code': '2010'}, 'transactions': <generator object _parse_transactions at 0x170c190>}
+```
+
 Listing transactions from single account statement:
 
 ```python
