@@ -23,7 +23,7 @@ except ImportError:
 base_path = os.path.dirname(__file__)
 
 
-version = '0.0.4'
+version = '0.0.5'
 
 
 # release a version, publish to GitHub and PyPI
