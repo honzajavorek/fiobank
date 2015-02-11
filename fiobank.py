@@ -51,7 +51,7 @@ class FioBank(object):
         u'KS': ('constant_symbol', str),
         u'VS': ('variable_symbol', str),
         u'SS': ('specific_symbol', str),
-        u'Uživatelská identifikace': ('user_identifiaction', unicode),
+        u'Uživatelská identifikace': ('user_identification', unicode),
         u'Zpráva pro příjemce': ('recipient_message', unicode),
         u'Typ': ('type', unicode),
         u'Provedl': ('executor', unicode),
