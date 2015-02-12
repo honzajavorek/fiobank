@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import re
+from datetime import datetime, date
+
 import requests
 
-from datetime import datetime, date
 
 
 __all__ = ('FioBank',)
