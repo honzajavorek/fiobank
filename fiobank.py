@@ -87,6 +87,9 @@ class FioBank(object):
         url = template.format(token=self.token, **params)
 
         response = requests.get(url)
+        if response.status_code == requests.codes['conflict']:
+            raise ThrottlingError()
+
         response.raise_for_status()
 
         if response.content:
