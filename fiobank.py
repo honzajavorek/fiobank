@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import re
-from datetime import datetime, date
-
 import requests
+
+from datetime import datetime, date
 
 
 __all__ = ('FioBank',)
@@ -24,6 +24,14 @@ def sanitize_value(value, convert=None):
     if convert and value:
         return convert(value)
     return value
+
+
+class ThrottlingError(Exception):
+    """
+        Throttling error raised when api is being used too fast.
+    """
+    def __str__(self):
+        return 'Token should be used only once per 30s.'
 
 
 class FioBank(object):
@@ -104,7 +112,7 @@ class FioBank(object):
     def _parse_transactions(self, data):
         schema = self.transaction_schema
         try:
-            entries = data['accountStatement']['transactionList']['transaction']
+            entries = data['accountStatement']['transactionList']['transaction']  # noqa
         except TypeError:
             entries = []
 
