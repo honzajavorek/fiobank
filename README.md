@@ -50,8 +50,11 @@ Listing latest transactions:
 >>> client.last(from_date='2013-03-01')  # sets cursor to given date and returns following transactions
 ```
 
-For further information [read code](https://github.com/honzajavorek/fiobank/blob/master/fiobank.py).
+## Conflict error 
+[Fio api documentation](http://www.fio.cz/docs/cz/API_Bankovnictvi.pdf) (Section 8.2) states that a single token should be used only once per 30s. Otherwise a HTTP conflict will be returned and `Fiobank.ThrottlingError` will be raised. 
 
+
+For further information [read code](https://github.com/honzajavorek/fiobank/blob/master/fiobank.py).
 
 ## License: ISC
 
