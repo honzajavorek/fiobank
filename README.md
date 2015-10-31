@@ -2,10 +2,6 @@
 
 Little library implementing [Fio Bank API](http://www.fio.cz/bank-services/internetbanking-api) in Python.
 
-## Status: ACTIVE
-
-Under active development and maintenance. [Pull requests](http://help.github.com/send-pull-requests/) welcome! :-)
-
 ## Installation
 
 ```bash
