@@ -46,6 +46,27 @@ Listing latest transactions:
 >>> client.last(from_date='2013-03-01')  # sets cursor to given date and returns following transactions
 ```
 
+Let's send some money:
+```python
+f = open("/tmp/my_abo_file.abo", "r")
+fio.send("abo", "cs", "import.abo", f.read())
+```
+
+**Note:**
+Fio API allows more formats than ABO. I like ABO and I've used [this](https://github.com/hareevs/python-abo-generator) great library for generating.
+
+Returns (in case of success)
+
+```python
+{'status': True, 'instruction_id': u'89768892', 'sum': u'1.00'}
+```
+
+or in case of failure
+```python
+{'status': False, 'details': [{'code': 14, 'id': 1, 'message': u'Datum platby je v minulosti'}]}
+```
+
+
 For further information [read code](https://github.com/honzajavorek/fiobank/blob/master/fiobank.py).
 
 

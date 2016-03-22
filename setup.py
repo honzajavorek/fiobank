@@ -23,7 +23,7 @@ except ImportError:
 base_path = os.path.dirname(__file__)
 
 
-version = '0.0.5'
+version = '0.1.0'
 
 
 # release a version, publish to GitHub and PyPI
@@ -40,12 +40,12 @@ setup(
     version=version,
     description='Little library implementing Fio Bank API in Python',
     long_description=open('README.md').read(),
-    author='Honza Javorek',
-    author_email='jan.javorek@gmail.com',
+    author='Honza Javorek, Pavel Hrdina',
+    author_email='jan.javorek@gmail.com, hrdina.pavel@gmail.com',
     url='https://github.com/honzajavorek/fiobank',
     license=open('LICENSE').read(),
     py_modules=('fiobank',),
-    install_requires=['requests>=1.0.0'],
+    install_requires=['requests>=1.0.0', "xmltodict>=0.10.1"],
     classifiers=(
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
