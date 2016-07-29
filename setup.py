@@ -1,38 +1,17 @@
 # -*- coding: utf-8 -*-
 
 
-import os
 import sys
-import shlex
-import subprocess
+from setuptools import setup
 
 try:
-    from setuptools import setup, find_packages
-except ImportError:
-    from distutils.core import setup, find_packages  # NOQA
-
-# Hack to prevent stupid "TypeError: 'NoneType' object is not callable"
-# error in multiprocessing/util.py _exit_function when running `python
-# setup.py test`
-try:
-    import multiprocessing  # NOQA
+    from semantic_release import setup_hook
+    setup_hook(sys.argv)
 except ImportError:
     pass
 
 
-base_path = os.path.dirname(__file__)
-
-
 version = '0.0.5'
-
-
-# release a version, publish to GitHub and PyPI
-if sys.argv[-1] == 'publish':
-    command = lambda cmd: subprocess.check_call(shlex.split(cmd))
-    command('git tag v' + version)
-    command('git push --tags origin master:master')
-    command('python setup.py sdist upload')
-    sys.exit()
 
 
 setup(
@@ -41,13 +20,13 @@ setup(
     description='Little library implementing Fio Bank API in Python',
     long_description=open('README.md').read(),
     author='Honza Javorek',
-    author_email='jan.javorek@gmail.com',
+    author_email='mail@honzajavorek.cz',
     url='https://github.com/honzajavorek/fiobank',
     license=open('LICENSE').read(),
     py_modules=('fiobank',),
     install_requires=['requests>=1.0.0'],
     classifiers=(
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: ISC License (ISCL)',
         'Programming Language :: Python',

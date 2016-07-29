@@ -1,0 +1,19 @@
+sudo: false
+language: "python"
+cache: "pip"
+python:
+    - "2.7"
+    - "3.5"
+env:
+    global:
+        - PYPI_USERNAME=honzajavorek
+        - secure: "jOUhNuGVbKI5+5mw5UhMayjAhqv5L1w8gmjmHgZOlY1rNA00P3TW5asy1wwbLxTfDAudA+WlEBiakyp3qwZhe41A9rzMGTjxZkp3257gJZH0/Tq4DLI1OCRffU/3RgyUJT2SJc0cneec6U5//iXeHvneGu6qyiC46nIuxOHau0U="
+before_install:
+    - "pip install semantic-release"
+script:
+    - "flake8"
+    - "python -m unittest discover"
+after_success:
+    - "git config --global user.name 'Honza Javorek'"
+    - "git config --global user.email 'mail@honzajavorek.cz'"
+    - "python setup.py publish"
