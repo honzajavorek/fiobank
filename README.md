@@ -51,6 +51,6 @@ For further information [read code](https://github.com/honzajavorek/fiobank/blob
 
 ## License: ISC
 
-© 2013 Jan Javorek <jan.javorek@gmail.com>
+© 2013-? Honza Javorek <mail@honzajavorek.cz>
 
 This work is licensed under [ISC license](https://en.wikipedia.org/wiki/ISC_license).
