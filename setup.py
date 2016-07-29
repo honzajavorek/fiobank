@@ -11,7 +11,7 @@ except ImportError:
     pass
 
 
-version = '0.0.5'
+version = '1.0.0'
 
 
 setup(
