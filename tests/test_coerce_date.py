@@ -11,7 +11,7 @@ from fiobank import coerce_date
 
 @pytest.mark.parametrize('test_input', [
     date(2015, 8, 3),
-    datetime(2015, 8, 3, 21, 03, 42),
+    datetime(2015, 8, 3, 21, 3, 42),
     '2015-08-03T21:03:42',
 ])
 def test_coerce_date(test_input):
