@@ -1,10 +1,10 @@
 # fiobank
 
-Little library implementing [Fio Bank API](http://www.fio.cz/bank-services/internetbanking-api) in Python.
+[Fio Bank API](http://www.fio.cz/bank-services/internetbanking-api) in Python.
 
 ## Installation
 
-```bash
+```sh
 $ pip install fiobank
 ```
 
@@ -24,7 +24,7 @@ Account information:
 {'currency': 'CZK', 'account_number_full': 'XXXXXXXXXX/2010', 'balance': 42.00, 'account_number': 'XXXXXXXXXX', 'bank_code': '2010'}
 ```
 
-Listing transactions within time period:
+Listing transactions within a time period:
 
 ```python
 >>> gen = client.period('2013-01-20', '2013-03-20')
@@ -32,7 +32,7 @@ Listing transactions within time period:
 {'comment': u'N\xe1kup: IKEA CR, BRNO, CZ, dne 17.1.2013, \u010d\xe1stka  2769.00 CZK', 'recipient_message': u'N\xe1kup: IKEA CR, BRNO, CZ, dne 17.1.2013, \u010d\xe1stka  2769.00 CZK', 'user_identifiaction': u'N\xe1kup: IKEA CR, BRNO, CZ, dne 17.1.2013, \u010d\xe1stka  2769.00 CZK', 'currency': 'CZK', 'amount': -2769.0, 'instruction_id': 'XXXXXXXXXX', 'executor': u'Vilém Fusek', 'date': datetime.date(2013, 1, 20), 'type': u'Platba kartou', 'transaction_id': 'XXXXXXXXXX'}
 ```
 
-Listing transactions from single account statement:
+Listing transactions from a single account statement:
 
 ```python
 >>> client.statement(2013, 1)  # 1 is January only by coincidence - arguments mean 'first statement of 2013'
