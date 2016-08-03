@@ -47,7 +47,7 @@ setup(
     tests_require=tests_require,
     extras_require={
         'tests': tests_require,
-        'publish': release_requires,
+        'release': release_requires,
     },
     classifiers=(
         'Development Status :: 5 - Production/Stable',
