@@ -13,7 +13,7 @@ $ pip install fiobank
 
 ## Usage
 
-Initialization of client:
+First, [get your API token](https://www.fio.cz/ib2/wicket/page/NastaveniPage?3). Initialization of the client:
 
 ```python
 >>> from fiobank import FioBank
