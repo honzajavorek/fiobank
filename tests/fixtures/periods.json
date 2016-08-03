@@ -1,0 +1,154 @@
+{
+    "accountStatement": {
+        "info": {
+            "dateStart": "2016-08-03+0200",
+            "idList": null,
+            "idLastDownload": null,
+            "closingBalance": 2060.52,
+            "bic": "FIOBCZPPXXX",
+            "yearList": null,
+            "idTo": 10000000001,
+            "currency": "CZK",
+            "openingBalance": 2543.81,
+            "iban": "CZ1220100000001234567890",
+            "idFrom": 10000000002,
+            "bankId": "2010",
+            "dateEnd": "2016-08-03+0200",
+            "accountId": "1234567890"
+        },
+        "transactionList": {
+            "transaction": [
+                {
+                    "column18": null,
+                    "column26": null,
+                    "column10": null,
+                    "column12": null,
+                    "column14": {
+                        "name": "M\u011bna",
+                        "value": "CZK",
+                        "id": 14
+                    },
+                    "column17": {
+                        "name": "ID pokynu",
+                        "value": 12210748893,
+                        "id": 17
+                    },
+                    "column16": {
+                        "name": "Zpr\u00e1va pro p\u0159\u00edjemce",
+                        "value": "N\u00e1kup: ORDR, PRAGUE, CZ, dne 1.8.2016, \u010d\u00e1stka  130.00 CZK",
+                        "id": 16
+                    },
+                    "column22": {
+                        "name": "ID pohybu",
+                        "value": 10000000002,
+                        "id": 22
+                    },
+                    "column9": {
+                        "name": "Provedl",
+                        "value": "Javorek, Jan",
+                        "id": 9
+                    },
+                    "column8": {
+                        "name": "Typ",
+                        "value": "Platba kartou",
+                        "id": 8
+                    },
+                    "column25": {
+                        "name": "Koment\u00e1\u0159",
+                        "value": "N\u00e1kup: ORDR, PRAGUE, CZ, dne 1.8.2016, \u010d\u00e1stka  130.00 CZK",
+                        "id": 25
+                    },
+                    "column5": {
+                        "name": "VS",
+                        "value": "5678",
+                        "id": 5
+                    },
+                    "column4": null,
+                    "column7": {
+                        "name": "U\u017eivatelsk\u00e1 identifikace",
+                        "value": "N\u00e1kup: ORDR, PRAGUE, CZ, dne 1.8.2016, \u010d\u00e1stka  130.00 CZK",
+                        "id": 7
+                    },
+                    "column6": null,
+                    "column1": {
+                        "name": "Objem",
+                        "value": -130.0,
+                        "id": 1
+                    },
+                    "column0": {
+                        "name": "Datum",
+                        "value": "2016-08-03+0200",
+                        "id": 0
+                    },
+                    "column3": null,
+                    "column2": null
+                },
+                {
+                    "column18": null,
+                    "column26": null,
+                    "column10": null,
+                    "column12": null,
+                    "column14": {
+                        "name": "M\u011bna",
+                        "value": "CZK",
+                        "id": 14
+                    },
+                    "column17": {
+                        "name": "ID pokynu",
+                        "value": 12210832097,
+                        "id": 17
+                    },
+                    "column16": {
+                        "name": "Zpr\u00e1va pro p\u0159\u00edjemce",
+                        "value": "N\u00e1kup: Billa Ul. Konevova, Praha - Vitko, CZ, dne 1.8.2016, \u010d\u00e1stka  353.29 CZK",
+                        "id": 16
+                    },
+                    "column22": {
+                        "name": "ID pohybu",
+                        "value": 10000000001,
+                        "id": 22
+                    },
+                    "column9": {
+                        "name": "Provedl",
+                        "value": "Javorek, Jan",
+                        "id": 9
+                    },
+                    "column8": {
+                        "name": "Typ",
+                        "value": "Platba kartou",
+                        "id": 8
+                    },
+                    "column25": {
+                        "name": "Koment\u00e1\u0159",
+                        "value": "N\u00e1kup: Billa Ul. Konevova, Praha - Vitko, CZ, dne 1.8.2016, \u010d\u00e1stka  353.29 CZK",
+                        "id": 25
+                    },
+                    "column5": {
+                        "name": "VS",
+                        "value": "1234",
+                        "id": 5
+                    },
+                    "column4": null,
+                    "column7": {
+                        "name": "U\u017eivatelsk\u00e1 identifikace",
+                        "value": "N\u00e1kup: Billa Ul. Konevova, Praha - Vitko, CZ, dne 1.8.2016, \u010d\u00e1stka  353.29 CZK",
+                        "id": 7
+                    },
+                    "column6": null,
+                    "column1": {
+                        "name": "Objem",
+                        "value": -353.29,
+                        "id": 1
+                    },
+                    "column0": {
+                        "name": "Datum",
+                        "value": "2016-08-03+0200",
+                        "id": 0
+                    },
+                    "column3": null,
+                    "column2": null
+                }
+            ]
+        }
+    }
+}
