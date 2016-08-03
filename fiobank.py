@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 
+
+from __future__ import unicode_literals
+
 import re
 from datetime import datetime, date
 
+import six
 import requests
 
 
@@ -10,18 +14,18 @@ __all__ = ('FioBank',)
 
 
 def coerce_date(value):
-    if isinstance(value, date):
-        return value
-    elif isinstance(value, datetime):
+    if isinstance(value, datetime):
         return value.date()
+    elif isinstance(value, date):
+        return value
     else:
         return datetime.strptime(value[:10], '%Y-%m-%d').date()
 
 
 def sanitize_value(value, convert=None):
-    if isinstance(value, basestring):
+    if isinstance(value, six.string_types):
         value = value.strip() or None
-    if convert and value:
+    if convert and value is not None:
         return convert(value)
     return value
 
@@ -104,7 +108,7 @@ class FioBank(object):
     def _parse_transactions(self, data):
         schema = self.transaction_schema
         try:
-            entries = data['accountStatement']['transactionList']['transaction']
+            entries = data['accountStatement']['transactionList']['transaction']  # NOQA
         except TypeError:
             entries = []
 
