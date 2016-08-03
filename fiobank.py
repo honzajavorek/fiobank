@@ -13,6 +13,9 @@ import requests
 __all__ = ('FioBank',)
 
 
+str = six.text_type
+
+
 def coerce_date(value):
     if isinstance(value, datetime):
         return value.date()
@@ -43,34 +46,34 @@ class FioBank(object):
     }
 
     transaction_schema = {
-        u'ID pohybu': ('transaction_id', str),
-        u'Datum': ('date', unicode),
-        u'Objem': ('amount', float),
-        u'Měna': ('currency', str),
-        u'Protiúčet': ('account_number', str),
-        u'Název protiúčtu': ('account_name', unicode),
-        u'Kód banky': ('bank_code', str),
-        u'BIC': ('bic', str),
-        u'Název banky': ('bank_name', unicode),
-        u'KS': ('constant_symbol', str),
-        u'VS': ('variable_symbol', str),
-        u'SS': ('specific_symbol', str),
-        u'Uživatelská identifikace': ('user_identification', unicode),
-        u'Zpráva pro příjemce': ('recipient_message', unicode),
-        u'Typ': ('type', unicode),
-        u'Provedl': ('executor', unicode),
-        u'Upřesnění': ('specification', unicode),
-        u'Komentář': ('comment', unicode),
-        u'ID pokynu': ('instruction_id', str),
+        'ID pohybu': ('transaction_id', str),
+        'Datum': ('date', str),
+        'Objem': ('amount', float),
+        'Měna': ('currency', str),
+        'Protiúčet': ('account_number', str),
+        'Název protiúčtu': ('account_name', str),
+        'Kód banky': ('bank_code', str),
+        'BIC': ('bic', str),
+        'Název banky': ('bank_name', str),
+        'KS': ('constant_symbol', str),
+        'VS': ('variable_symbol', str),
+        'SS': ('specific_symbol', str),
+        'Uživatelská identifikace': ('user_identification', str),
+        'Zpráva pro příjemce': ('recipient_message', str),
+        'Typ': ('type', str),
+        'Provedl': ('executor', str),
+        'Upřesnění': ('specification', str),
+        'Komentář': ('comment', str),
+        'ID pokynu': ('instruction_id', str),
     }
 
     info_schema = {
-        u'accountId': ('account_number', str),
-        u'bankId': ('bank_code', str),
-        u'currency': ('currency', str),
-        u'IBAN': ('iban', str),
-        u'BIC': ('bic', str),
-        u'closingBalance': ('balance', float),
+        'accountId': ('account_number', str),
+        'bankId': ('bank_code', str),
+        'currency': ('currency', str),
+        'IBAN': ('iban', str),
+        'BIC': ('bic', str),
+        'closingBalance': ('balance', float),
     }
 
     _amount_re = re.compile(r'\-?[\d+](\.\d+)? [A-Z]{3}')
@@ -155,7 +158,7 @@ class FioBank(object):
         return self._parse_transactions(data)
 
     def last(self, from_id=None, from_date=None):
-        assert not (from_id and from_date), "Only one constraint is allowed."
+        assert not (from_id and from_date), 'Only one constraint is allowed.'
 
         if from_id:
             self._request('set-last-id', from_id=from_id)
