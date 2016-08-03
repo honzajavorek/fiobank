@@ -46,34 +46,34 @@ class FioBank(object):
     }
 
     transaction_schema = {
-        'ID pohybu': ('transaction_id', str),
-        'Datum': ('date', str),
-        'Objem': ('amount', float),
-        'Měna': ('currency', str),
-        'Protiúčet': ('account_number', str),
-        'Název protiúčtu': ('account_name', str),
-        'Kód banky': ('bank_code', str),
-        'BIC': ('bic', str),
-        'Název banky': ('bank_name', str),
-        'KS': ('constant_symbol', str),
-        'VS': ('variable_symbol', str),
-        'SS': ('specific_symbol', str),
-        'Uživatelská identifikace': ('user_identification', str),
-        'Zpráva pro příjemce': ('recipient_message', str),
-        'Typ': ('type', str),
-        'Provedl': ('executor', str),
-        'Upřesnění': ('specification', str),
-        'Komentář': ('comment', str),
-        'ID pokynu': ('instruction_id', str),
+        'id pohybu': ('transaction_id', str),
+        'datum': ('date', str),
+        'objem': ('amount', float),
+        'měna': ('currency', str),
+        'protiúčet': ('account_number', str),
+        'název protiúčtu': ('account_name', str),
+        'kód banky': ('bank_code', str),
+        'bic': ('bic', str),
+        'název banky': ('bank_name', str),
+        'ks': ('constant_symbol', str),
+        'vs': ('variable_symbol', str),
+        'ss': ('specific_symbol', str),
+        'uživatelská identifikace': ('user_identification', str),
+        'zpráva pro příjemce': ('recipient_message', str),
+        'typ': ('type', str),
+        'provedl': ('executor', str),
+        'upřesnění': ('specification', str),
+        'komentář': ('comment', str),
+        'id pokynu': ('instruction_id', str),
     }
 
     info_schema = {
-        'accountId': ('account_number', str),
-        'bankId': ('bank_code', str),
+        'accountid': ('account_number', str),
+        'bankid': ('bank_code', str),
         'currency': ('currency', str),
-        'IBAN': ('iban', str),
-        'BIC': ('bic', str),
-        'closingBalance': ('balance', float),
+        'iban': ('iban', str),
+        'bic': ('bic', str),
+        'closingbalance': ('balance', float),
     }
 
     _amount_re = re.compile(r'\-?[\d+](\.\d+)? [A-Z]{3}')
@@ -96,6 +96,7 @@ class FioBank(object):
         # parse data from API
         info = {}
         for key, value in data['accountStatement']['info'].items():
+            key = key.lower()
             if key in self.info_schema:
                 field_name, type_ = self.info_schema[key]
                 value = sanitize_value(value, type_)
@@ -121,7 +122,7 @@ class FioBank(object):
             for column_name, column_data in entry.items():
                 if not column_data:
                     continue
-                field_name, type_ = schema[column_data['name']]
+                field_name, type_ = schema[column_data['name'].lower()]
                 value = sanitize_value(column_data['value'], type_)
                 trans[field_name] = value
 
@@ -145,6 +146,9 @@ class FioBank(object):
     def info(self):
         today = date.today()
         data = self._request('periods', from_date=today, to_date=today)
+        # with open('info.json', 'w') as f:
+        #     import json
+        #     json.dump(data, f, indent=4)
         return self._parse_info(data)
 
     def period(self, from_date, to_date):
