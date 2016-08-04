@@ -19,10 +19,10 @@ try:
 except ImportError:
     message = (
         "Unable to locate 'pypandoc', long description of the 'fiobank'"
-        "package won't be available"
+        "package won't be available in reStructuredText"
     )
     print(message, file=sys.stderr)
-    long_description = ''
+    long_description = open('README.md').read()
 
 
 version = '1.1.0'
