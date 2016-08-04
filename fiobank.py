@@ -54,25 +54,25 @@ class FioBank(object):
 
     # http://www.fio.cz/xsd/IBSchema.xsd
     transaction_schema = {
-        'column22': ('transaction_id', str),
         'column0': ('date', coerce_date),
         'column1': ('amount', float),
-        'column14': ('currency', str),
         'column2': ('account_number', str),
-        'column10': ('account_name', str),
         'column3': ('bank_code', str),
-        'column26': ('bic', str),
-        'column12': ('bank_name', str),
         'column4': ('constant_symbol', str),
         'column5': ('variable_symbol', str),
         'column6': ('specific_symbol', str),
         'column7': ('user_identification', str),
-        'column16': ('recipient_message', str),
         'column8': ('type', str),
         'column9': ('executor', str),
-        'column18': ('specification', str),
-        'column25': ('comment', str),
+        'column10': ('account_name', str),
+        'column12': ('bank_name', str),
+        'column14': ('currency', str),
+        'column16': ('recipient_message', str),
         'column17': ('instruction_id', str),
+        'column18': ('specification', str),
+        'column22': ('transaction_id', str),
+        'column25': ('comment', str),
+        'column26': ('bic', str),
     }
 
     info_schema = {
