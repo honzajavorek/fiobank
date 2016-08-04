@@ -1,6 +1,6 @@
 # fiobank
 
-[![PyPI version](https://badge.fury.io/py/redis-collections.svg)](https://badge.fury.io/py/redis-collections)
+[![PyPI version](https://badge.fury.io/py/fiobank.svg)](https://badge.fury.io/py/fiobank)
 [![Build Status](https://travis-ci.org/honzajavorek/fiobank.svg?branch=master)](https://travis-ci.org/honzajavorek/fiobank)
 
 [Fio Bank API](http://www.fio.cz/bank-services/internetbanking-api) in Python.
