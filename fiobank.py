@@ -136,6 +136,10 @@ class FioBank(object):
                 amount, currency = trans['specification'].split(' ')
                 trans['original_amount'] = float(amount)
                 trans['original_currency'] = currency
+            else:
+                trans['original_amount'] = None
+                trans['original_currency'] = None
+
             self._add_account_number_full(trans)
 
             # generate transaction data
