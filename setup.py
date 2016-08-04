@@ -29,7 +29,7 @@ version = '1.0.0'
 
 
 install_requires = ['requests', 'six']
-tests_require = ['pytest-runner', 'pytest', 'flake8', 'responses']
+tests_require = ['pytest-runner', 'pytest', 'flake8', 'responses', 'mock']
 release_requires = ['pypandoc', 'python-semantic-release']
 
 

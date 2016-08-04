@@ -10,12 +10,12 @@ from fiobank import coerce_date
 
 
 @pytest.mark.parametrize('test_input', [
-    date(2015, 8, 3),
-    datetime(2015, 8, 3, 21, 3, 42),
-    '2015-08-03T21:03:42',
+    date(2016, 8, 3),
+    datetime(2016, 8, 3, 21, 3, 42),
+    '2016-08-03T21:03:42',
 ])
 def test_coerce_date(test_input):
-    assert coerce_date(test_input) == date(2015, 8, 3)
+    assert coerce_date(test_input) == date(2016, 8, 3)
 
 
 @pytest.mark.parametrize('test_input', [42, True])
