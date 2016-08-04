@@ -45,26 +45,27 @@ class FioBank(object):
         'set-last-date': 'set-last-date/{token}/{from_date}/',
     }
 
+    # http://www.fio.cz/xsd/IBSchema.xsd
     transaction_schema = {
-        'id pohybu': ('transaction_id', str),
-        'datum': ('date', str),
-        'objem': ('amount', float),
-        'měna': ('currency', str),
-        'protiúčet': ('account_number', str),
-        'název protiúčtu': ('account_name', str),
-        'kód banky': ('bank_code', str),
-        'bic': ('bic', str),
-        'název banky': ('bank_name', str),
-        'ks': ('constant_symbol', str),
-        'vs': ('variable_symbol', str),
-        'ss': ('specific_symbol', str),
-        'uživatelská identifikace': ('user_identification', str),
-        'zpráva pro příjemce': ('recipient_message', str),
-        'typ': ('type', str),
-        'provedl': ('executor', str),
-        'upřesnění': ('specification', str),
-        'komentář': ('comment', str),
-        'id pokynu': ('instruction_id', str),
+        'column22': ('transaction_id', str),
+        'column0': ('date', coerce_date),
+        'column1': ('amount', float),
+        'column14': ('currency', str),
+        'column2': ('account_number', str),
+        'column10': ('account_name', str),
+        'column3': ('bank_code', str),
+        'column26': ('bic', str),
+        'column12': ('bank_name', str),
+        'column4': ('constant_symbol', str),
+        'column5': ('variable_symbol', str),
+        'column6': ('specific_symbol', str),
+        'column7': ('user_identification', str),
+        'column16': ('recipient_message', str),
+        'column8': ('type', str),
+        'column9': ('executor', str),
+        'column18': ('specification', str),
+        'column25': ('comment', str),
+        'column17': ('instruction_id', str),
     }
 
     info_schema = {
@@ -76,7 +77,7 @@ class FioBank(object):
         'closingbalance': ('balance', float),
     }
 
-    _amount_re = re.compile(r'\-?[\d+](\.\d+)? [A-Z]{3}')
+    _amount_re = re.compile(r'\-?\d+(\.\d+)? [A-Z]{3}')
 
     def __init__(self, token):
         self.token = token
@@ -98,13 +99,12 @@ class FioBank(object):
         for key, value in data['accountStatement']['info'].items():
             key = key.lower()
             if key in self.info_schema:
-                field_name, type_ = self.info_schema[key]
-                value = sanitize_value(value, type_)
+                field_name, convert = self.info_schema[key]
+                value = sanitize_value(value, convert)
                 info[field_name] = value
 
         # make some refinements
-        info['account_number_full'] = (info['account_number'] +
-                                       '/' + info['bank_code'])
+        self._add_account_number_full(info)
 
         # return data
         return info
@@ -122,33 +122,39 @@ class FioBank(object):
             for column_name, column_data in entry.items():
                 if not column_data:
                     continue
-                field_name, type_ = schema[column_data['name'].lower()]
-                value = sanitize_value(column_data['value'], type_)
+                field_name, convert = schema[column_name.lower()]
+                value = sanitize_value(column_data['value'], convert)
                 trans[field_name] = value
+
+            # add missing fileds with None values
+            for column_data_name, (field_name, convert) in schema.items():
+                trans.setdefault(field_name, None)
 
             # make some refinements
             is_amount = self._amount_re.match
-            if 'specification' in trans and is_amount(trans['specification']):
+            if trans['specification'] is not None and is_amount(trans['specification']):
                 amount, currency = trans['specification'].split(' ')
                 trans['original_amount'] = float(amount)
                 trans['original_currency'] = currency
-
-            if 'date' in trans:
-                trans['date'] = coerce_date(trans['date'])
-
-            if 'account_number' in trans and 'bank_code' in trans:
-                trans['account_number_full'] = (trans['account_number'] +
-                                                '/' + trans['bank_code'])
+            self._add_account_number_full(trans)
 
             # generate transaction data
             yield trans
 
+    def _add_account_number_full(self, obj):
+        account_number = obj.get('account_number')
+        bank_code = obj.get('bank_code')
+
+        if account_number is not None and bank_code is not None:
+            account_number_full = '{}/{}'.format(account_number, bank_code)
+        else:
+            account_number_full = None
+
+        obj['account_number_full'] = account_number_full
+
     def info(self):
         today = date.today()
         data = self._request('periods', from_date=today, to_date=today)
-        # with open('info.json', 'w') as f:
-        #     import json
-        #     json.dump(data, f, indent=4)
         return self._parse_info(data)
 
     def period(self, from_date, to_date):
@@ -162,7 +168,8 @@ class FioBank(object):
         return self._parse_transactions(data)
 
     def last(self, from_id=None, from_date=None):
-        assert not (from_id and from_date), 'Only one constraint is allowed.'
+        if from_id and from_date:
+            raise ValueError('Only one constraint is allowed.')
 
         if from_id:
             self._request('set-last-id', from_id=from_id)
