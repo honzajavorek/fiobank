@@ -33,7 +33,8 @@ Account information:
     {
       'currency': 'CZK',
       'account_number_full': 'XXXXXXXXXX/2010',
-      'balance': 42.00, 'account_number': 'XXXXXXXXXX',
+      'balance': 42.00,
+      'account_number': 'XXXXXXXXXX',
       'bank_code': '2010'
     }
 
@@ -41,17 +42,18 @@ Listing transactions within a time period:
 
 .. code:: python
 
-    >>> gen = client.period('2013-01-20',
-    '2013-03-20')
+    >>> gen = client.period('2013-01-20', '2013-03-20')
     >>> list(gen)[0]
     {
       'comment': 'N\xe1kup: IKEA CR, BRNO, CZ, dne 17.1.2013, \u010d\xe1stka  2769.00 CZK',
       'recipient_message': 'N\xe1kup: IKEA CR, BRNO, CZ, dne 17.1.2013, \u010d\xe1stka  2769.00 CZK',
       'user_identifiaction': 'N\xe1kup: IKEA CR, BRNO, CZ, dne 17.1.2013, \u010d\xe1stka  2769.00 CZK',
       'currency': 'CZK',
-      'amount': -2769.0, 'instruction_id': 'XXXXXXXXXX',
+      'amount': -2769.0,
+      'instruction_id': 'XXXXXXXXXX',
       'executor': 'Vilém Fusek',
-      'date': datetime.date(2013, 1, 20), 'type': 'Platba kartou',
+      'date': datetime.date(2013, 1, 20),
+      'type': 'Platba kartou',
       'transaction_id': 'XXXXXXXXXX'
     }
 
@@ -72,8 +74,7 @@ Listing latest transactions:
 Conflict Error
 --------------
 
-`Fio API
-documentation <http://www.fio.cz/docs/cz/API_Bankovnictvi.pdf>`__
+`Fio API documentation <http://www.fio.cz/docs/cz/API_Bankovnictvi.pdf>`__
 (Section 8.2) states that a single token should be used only once per
 30s. Otherwise a HTTP 409 Conflict will be returned and
 ``fiobank.ThrottlingError`` will be raised.
