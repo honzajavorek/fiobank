@@ -131,8 +131,9 @@ class FioBank(object):
                 trans.setdefault(field_name, None)
 
             # make some refinements
+            specification = trans.get('specification')
             is_amount = self._amount_re.match
-            if trans['specification'] is not None and is_amount(trans['specification']):
+            if specification is not None and is_amount(specification):
                 amount, currency = trans['specification'].split(' ')
                 trans['original_amount'] = float(amount)
                 trans['original_currency'] = currency

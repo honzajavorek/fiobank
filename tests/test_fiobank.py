@@ -18,7 +18,7 @@ import six
 import pytest
 import requests
 import responses
-from fiobank import FioBank, coerce_date
+from fiobank import FioBank
 
 
 str = six.text_type
@@ -157,9 +157,8 @@ def test_period_coerces_date(transactions_json):
     with mock.patch.object(client, '_request', **options) as stub:
         client.period(from_date, to_date)
         stub.assert_called_once_with('periods',
-            from_date=date(2016, 8, 4),
-            to_date=date(2016, 8, 30)
-        )
+                                     from_date=date(2016, 8, 4),
+                                     to_date=date(2016, 8, 30))
 
 
 def test_statement(transactions_json):
@@ -304,7 +303,8 @@ def test_amount_re(test_input):
     ('-308 EUR', -308.0, 'EUR'),
     ('46052.01 HUF', 46052.01, 'HUF'),
 ])
-def test_transactions_parse_amount(transactions_json, test_input, amount, currency):
+def test_transactions_parse_amount(transactions_json, test_input,
+                                   amount, currency):
     client = FioBank('...')
 
     api_transaction = transactions_json['accountStatement']['transactionList']['transaction'][0]  # NOQA
@@ -339,8 +339,3 @@ def test_transactions_parse_no_account_number_full(transactions_json):
     sdk_transaction = list(client._parse_transactions(transactions_json))[0]
 
     assert sdk_transaction['account_number_full'] is None
-
-
-
-# TODO otestovat conflict (rate-limiting)
-# TODO otestovat nejakou error response nebo jiny nesmysl (from > to?)
