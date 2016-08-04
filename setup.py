@@ -1,53 +1,56 @@
 # -*- coding: utf-8 -*-
 
 
-import os
+from __future__ import print_function
+
 import sys
-import shlex
-import subprocess
+from setuptools import setup
 
 try:
-    from setuptools import setup, find_packages
+    from semantic_release import setup_hook
+    setup_hook(sys.argv)
 except ImportError:
-    from distutils.core import setup, find_packages  # NOQA
+    message = "Unable to locate 'semantic_release', releasing won't work"
+    print(message, file=sys.stderr)
 
-# Hack to prevent stupid "TypeError: 'NoneType' object is not callable"
-# error in multiprocessing/util.py _exit_function when running `python
-# setup.py test`
 try:
-    import multiprocessing  # NOQA
+    import pypandoc
+    long_description = pypandoc.convert_file('README.md', 'rst')
 except ImportError:
-    pass
+    message = (
+        "Unable to locate 'pypandoc', long description of the 'fiobank'"
+        "package won't be available"
+    )
+    print(message, file=sys.stderr)
+    long_description = ''
 
 
-base_path = os.path.dirname(__file__)
+version = '1.0.0'
 
 
-version = '0.0.5'
-
-
-# release a version, publish to GitHub and PyPI
-if sys.argv[-1] == 'publish':
-    command = lambda cmd: subprocess.check_call(shlex.split(cmd))
-    command('git tag v' + version)
-    command('git push --tags origin master:master')
-    command('python setup.py sdist upload')
-    sys.exit()
+install_requires = ['requests', 'six']
+tests_require = ['pytest-runner', 'pytest', 'flake8', 'responses', 'mock']
+release_requires = ['pypandoc', 'python-semantic-release']
 
 
 setup(
     name='fiobank',
     version=version,
-    description='Little library implementing Fio Bank API in Python',
-    long_description=open('README.md').read(),
+    description='Fio Bank API in Python',
+    long_description=long_description,
     author='Honza Javorek',
-    author_email='jan.javorek@gmail.com',
+    author_email='mail@honzajavorek.cz',
     url='https://github.com/honzajavorek/fiobank',
     license=open('LICENSE').read(),
     py_modules=('fiobank',),
-    install_requires=['requests>=1.0.0'],
+    install_requires=install_requires,
+    tests_require=tests_require,
+    extras_require={
+        'tests': tests_require,
+        'release': release_requires,
+    },
     classifiers=(
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: ISC License (ISCL)',
         'Programming Language :: Python',
@@ -55,5 +58,6 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Topic :: Software Development :: Libraries :: Python Modules',
         'Topic :: Internet',
-    )
+    ),
+    keywords='bank api wrapper sdk fio'
 )

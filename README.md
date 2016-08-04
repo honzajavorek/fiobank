@@ -1,16 +1,19 @@
 # fiobank
 
-Little library implementing [Fio Bank API](http://www.fio.cz/bank-services/internetbanking-api) in Python.
+[![PyPI version](https://badge.fury.io/py/redis-collections.svg)](https://badge.fury.io/py/redis-collections)
+[![Build Status](https://travis-ci.org/honzajavorek/fiobank.svg?branch=master)](https://travis-ci.org/honzajavorek/fiobank)
+
+[Fio Bank API](http://www.fio.cz/bank-services/internetbanking-api) in Python.
 
 ## Installation
 
-```bash
+```sh
 $ pip install fiobank
 ```
 
 ## Usage
 
-Initialization of client:
+First, [get your API token](https://www.fio.cz/ib2/wicket/page/NastaveniPage?3). Initialization of the client:
 
 ```python
 >>> from fiobank import FioBank
@@ -24,7 +27,7 @@ Account information:
 {'currency': 'CZK', 'account_number_full': 'XXXXXXXXXX/2010', 'balance': 42.00, 'account_number': 'XXXXXXXXXX', 'bank_code': '2010'}
 ```
 
-Listing transactions within time period:
+Listing transactions within a time period:
 
 ```python
 >>> gen = client.period('2013-01-20', '2013-03-20')
@@ -32,7 +35,7 @@ Listing transactions within time period:
 {'comment': u'N\xe1kup: IKEA CR, BRNO, CZ, dne 17.1.2013, \u010d\xe1stka  2769.00 CZK', 'recipient_message': u'N\xe1kup: IKEA CR, BRNO, CZ, dne 17.1.2013, \u010d\xe1stka  2769.00 CZK', 'user_identifiaction': u'N\xe1kup: IKEA CR, BRNO, CZ, dne 17.1.2013, \u010d\xe1stka  2769.00 CZK', 'currency': 'CZK', 'amount': -2769.0, 'instruction_id': 'XXXXXXXXXX', 'executor': u'Vilém Fusek', 'date': datetime.date(2013, 1, 20), 'type': u'Platba kartou', 'transaction_id': 'XXXXXXXXXX'}
 ```
 
-Listing transactions from single account statement:
+Listing transactions from a single account statement:
 
 ```python
 >>> client.statement(2013, 1)  # 1 is January only by coincidence - arguments mean 'first statement of 2013'
@@ -51,6 +54,6 @@ For further information [read code](https://github.com/honzajavorek/fiobank/blob
 
 ## License: ISC
 
-© 2013 Jan Javorek <jan.javorek@gmail.com>
+© 2013-? Honza Javorek <mail@honzajavorek.cz>
 
 This work is licensed under [ISC license](https://en.wikipedia.org/wiki/ISC_license).
