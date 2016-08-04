@@ -4,10 +4,6 @@ cache: "pip"
 python:
   - "2.7"
   - "3.5"
-addons:
-  apt:
-    packages:
-      - pandoc
 env:
   global:
     - PYPI_USERNAME=honzajavorek
