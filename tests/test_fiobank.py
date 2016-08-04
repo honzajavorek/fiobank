@@ -208,7 +208,7 @@ def test_transaction_schema_is_complete():
     columns_in_xsd = set()
 
     element_re = re.compile(r'<\w+:element[^>]+name="column_(\d+)')
-    for match in element_re.finditer(response.content):
+    for match in element_re.finditer(response.text):
         column_name = 'column{}'.format(match.group(1))
         columns_in_xsd.add(column_name)
 
