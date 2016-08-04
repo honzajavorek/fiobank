@@ -10,7 +10,7 @@ import six
 import requests
 
 
-__all__ = ('FioBank',)
+__all__ = ('FioBank', 'ThrottlingError')
 
 
 str = six.text_type
@@ -34,9 +34,8 @@ def sanitize_value(value, convert=None):
 
 
 class ThrottlingError(Exception):
-    """
-        Throttling error raised when api is being used too fast.
-    """
+    """Throttling error raised when api is being used too fast."""
+
     def __str__(self):
         return 'Token should be used only once per 30s.'
 
