@@ -10,7 +10,7 @@ import six
 import requests
 
 
-__all__ = ('FioBank',)
+__all__ = ('FioBank', 'ThrottlingError')
 
 
 str = six.text_type
@@ -33,6 +33,13 @@ def sanitize_value(value, convert=None):
     return value
 
 
+class ThrottlingError(Exception):
+    """Throttling error raised when api is being used too fast."""
+
+    def __str__(self):
+        return 'Token should be used only once per 30s.'
+
+
 class FioBank(object):
 
     base_url = 'https://www.fio.cz/ib_api/rest/'
@@ -47,25 +54,25 @@ class FioBank(object):
 
     # http://www.fio.cz/xsd/IBSchema.xsd
     transaction_schema = {
-        'column22': ('transaction_id', str),
         'column0': ('date', coerce_date),
         'column1': ('amount', float),
-        'column14': ('currency', str),
         'column2': ('account_number', str),
-        'column10': ('account_name', str),
         'column3': ('bank_code', str),
-        'column26': ('bic', str),
-        'column12': ('bank_name', str),
         'column4': ('constant_symbol', str),
         'column5': ('variable_symbol', str),
         'column6': ('specific_symbol', str),
         'column7': ('user_identification', str),
-        'column16': ('recipient_message', str),
         'column8': ('type', str),
         'column9': ('executor', str),
-        'column18': ('specification', str),
-        'column25': ('comment', str),
+        'column10': ('account_name', str),
+        'column12': ('bank_name', str),
+        'column14': ('currency', str),
+        'column16': ('recipient_message', str),
         'column17': ('instruction_id', str),
+        'column18': ('specification', str),
+        'column22': ('transaction_id', str),
+        'column25': ('comment', str),
+        'column26': ('bic', str),
     }
 
     info_schema = {
@@ -87,6 +94,9 @@ class FioBank(object):
         url = template.format(token=self.token, **params)
 
         response = requests.get(url)
+        if response.status_code == requests.codes['conflict']:
+            raise ThrottlingError()
+
         response.raise_for_status()
 
         if response.content:
