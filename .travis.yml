@@ -12,8 +12,9 @@ install:
   - "pip install -e .[tests,release]"
 script:
   - "flake8"
-  - "py.test"
+  - "py.test --cov-report="
 after_success:
-  - "git config --global user.name 'Honza Javorek'"
-  - "git config --global user.email 'mail@honzajavorek.cz'"
+  - "coveralls"
+  - "git config user.name 'Honza Javorek'"
+  - "git config user.email 'mail@honzajavorek.cz'"
   - "python setup.py publish"

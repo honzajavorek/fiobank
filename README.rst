@@ -1,7 +1,7 @@
 fiobank
 =======
 
-|PyPI version| |Build Status|
+|PyPI version| |Build Status| |Test Coverage|
 
 `Fio Bank API <http://www.fio.cz/bank-services/internetbanking-api>`__
 in Python.
@@ -91,3 +91,5 @@ license <https://en.wikipedia.org/wiki/ISC_license>`__.
    :target: https://badge.fury.io/py/fiobank
 .. |Build Status| image:: https://travis-ci.org/honzajavorek/fiobank.svg?branch=master
    :target: https://travis-ci.org/honzajavorek/fiobank
+.. |Test Coverage| image:: https://coveralls.io/repos/github/honzajavorek/fiobank/badge.svg?branch=master
+   :target: https://coveralls.io/github/honzajavorek/fiobank?branch=master
