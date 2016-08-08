@@ -17,9 +17,22 @@ except ImportError:
 version = '1.2.0'
 
 
-install_requires = ['requests', 'six']
-tests_require = ['pytest-runner', 'pytest', 'flake8', 'responses', 'mock']
-release_requires = ['python-semantic-release']
+install_requires = [
+    'requests',
+    'six',
+]
+tests_require = [
+    'pytest-runner',
+    'pytest',
+    'flake8',
+    'responses',
+    'mock',
+    'coveralls',
+    'pytest-cov',
+]
+release_requires = [
+    'python-semantic-release',
+]
 
 
 setup(
