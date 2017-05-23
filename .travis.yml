@@ -5,9 +5,9 @@ python:
   - "2.7"
   - "3.5"
 env:
-  global:
+  global:  # 'travis encrypt PYPI_PASSWORD=... GH_TOKEN=...'
     - PYPI_USERNAME=honzajavorek
-    - secure: "jOUhNuGVbKI5+5mw5UhMayjAhqv5L1w8gmjmHgZOlY1rNA00P3TW5asy1wwbLxTfDAudA+WlEBiakyp3qwZhe41A9rzMGTjxZkp3257gJZH0/Tq4DLI1OCRffU/3RgyUJT2SJc0cneec6U5//iXeHvneGu6qyiC46nIuxOHau0U="
+    - secure: "fjvWMrCuRVznTg72qSofo6kDpVGnXKqOl/80Yt+J3gNUuMw1PnjE/PUkmVPjfYQWNEWaiu3pEb9DaqG4ZD3DQZZIb0GCF/geIKmZYaRE2sIaAMoSbwMjhxEabVHtWJoMfldN/qtz09beGRvWcywz/WcPnWCCxBhkWojfNhN7hrQ="
 install:
   - "pip install -e .[tests,release]"
 script:
