@@ -1,1 +1,1 @@
-include README.md setup.cfg LICENSE
+include README.rst setup.cfg LICENSE
