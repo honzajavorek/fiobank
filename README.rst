@@ -79,6 +79,19 @@ Conflict Error
 30s. Otherwise a HTTP 409 Conflict will be returned and
 ``fiobank.ThrottlingError`` will be raised.
 
+Contributing
+------------
+
+.. code:: shell
+
+    $ pip install -e .[tests]
+    $ pytest
+
+Changelog
+---------
+
+See `GitHub Releases <https://github.com/honzajavorek/fiobank/releases>`_.
+
 License: ISC
 ------------
 
