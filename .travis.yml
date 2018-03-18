@@ -1,4 +1,3 @@
-sudo: false
 language: "python"
 cache: "pip"
 python:
@@ -11,10 +10,8 @@ env:
 install:
   - "pip install -e .[tests,release]"
 script:
-  - "flake8"
-  - "py.test --cov-report="
+  - "pylama"
+  - "pytest --cov-report="
 after_success:
   - "coveralls"
-  - "git config user.name 'Honza Javorek'"
-  - "git config user.email 'mail@honzajavorek.cz'"
   - "python setup.py publish"

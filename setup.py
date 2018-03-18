@@ -24,7 +24,7 @@ install_requires = [
 tests_require = [
     'pytest-runner',
     'pytest',
-    'flake8',
+    'pylama',
     'responses',
     'mock',
     'coveralls',
@@ -43,7 +43,7 @@ setup(
     author='Honza Javorek',
     author_email='mail@honzajavorek.cz',
     url='https://github.com/honzajavorek/fiobank',
-    license=open('LICENSE').read(),
+    license='ISC',
     py_modules=('fiobank',),
     install_requires=install_requires,
     tests_require=tests_require,
