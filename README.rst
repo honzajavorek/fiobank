@@ -82,7 +82,7 @@ Conflict Error
 License: ISC
 ------------
 
-© 2013-? Honza Javorek mail@honzajavorek.cz
+© 2013 Honza Javorek mail@honzajavorek.cz
 
 This work is licensed under `ISC
 license <https://en.wikipedia.org/wiki/ISC_license>`__.
