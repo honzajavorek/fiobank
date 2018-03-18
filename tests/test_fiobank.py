@@ -1,12 +1,4 @@
-# -*- coding: utf-8 -*-
-
-
-from __future__ import unicode_literals
-
-try:
-    from unittest import mock  # PY>=3.3
-except ImportError:
-    import mock
+from unittest import mock
 
 import re
 import os
@@ -14,14 +6,10 @@ import uuid
 import json
 from datetime import date
 
-import six
 import pytest
 import requests
 import responses
 from fiobank import FioBank
-
-
-str = six.text_type
 
 
 @pytest.fixture(scope='function')

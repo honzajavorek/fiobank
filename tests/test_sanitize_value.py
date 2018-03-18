@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-
-
-from __future__ import unicode_literals
-
-import six
 import pytest
 from fiobank import sanitize_value
 
@@ -30,12 +24,12 @@ def test_sanitize_value_strip(test_input, expected):
 
 
 @pytest.mark.parametrize('test_input,convert,expected', [
-    ('abc', six.text_type, 'abc'),
-    ('žluťoučký kůň', six.text_type, 'žluťoučký kůň'),
-    (None, six.text_type, None),
+    ('abc', str, 'abc'),
+    ('žluťoučký kůň', str, 'žluťoučký kůň'),
+    (None, str, None),
     (None, bool, None),
-    (123, six.text_type, '123'),
-    (30.8, six.text_type, '30.8'),
+    (123, str, '123'),
+    (30.8, str, '30.8'),
     (0, int, 0),
     (30.8, int, 30),
     (False, bool, False),

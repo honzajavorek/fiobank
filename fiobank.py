@@ -1,19 +1,10 @@
-# -*- coding: utf-8 -*-
-
-
-from __future__ import unicode_literals
-
 import re
 from datetime import datetime, date
 
-import six
 import requests
 
 
 __all__ = ('FioBank', 'ThrottlingError')
-
-
-str = six.text_type
 
 
 def coerce_date(value):
@@ -26,7 +17,7 @@ def coerce_date(value):
 
 
 def sanitize_value(value, convert=None):
-    if isinstance(value, six.string_types):
+    if isinstance(value, str):
         value = value.strip() or None
     if convert and value is not None:
         return convert(value)
