@@ -1,110 +1,77 @@
-fiobank
-=======
+# fiobank
 
-|PyPI version| |Build Status| |Test Coverage|
+Little library implementing [Fio Bank API](http://www.fio.cz/bank-services/internetbanking-api) in Python.
 
-`Fio Bank API <http://www.fio.cz/bank-services/internetbanking-api>`__
-in Python.
+## Installation
 
-Installation
-------------
+```bash
+$ pip install fiobank
+```
 
-.. code:: sh
+## Usage
 
-    $ pip install fiobank
+Initialization of client:
 
-Usage
------
-
-First, get your API token.
-
-.. image:: token.png
-
-Initialization of the client:
-
-.. code:: python
-
-    >>> from fiobank import FioBank
-    >>> client = FioBank(token='...', decimal=True)
+```python
+>>> from fiobank import FioBank
+>>> client = FioBank(token='...')
+```
 
 Account information:
 
-.. code:: python
+```python
+>>> client.info()
+{'currency': 'CZK', 'account_number_full': 'XXXXXXXXXX/2010', 'balance': 42.00, 'account_number': 'XXXXXXXXXX', 'bank_code': '2010'}
+```
 
-    >>> client.info()
-    {
-      'currency': 'CZK',
-      'account_number_full': 'XXXXXXXXXX/2010',
-      'balance': Decimal('42.00'),
-      'account_number': 'XXXXXXXXXX',
-      'bank_code': '2010'
-    }
+Listing transactions within time period:
 
-Listing transactions within a period:
+```python
+>>> gen = client.period('2013-01-20', '2013-03-20')
+>>> list(gen)[0]
+{'comment': u'N\xe1kup: IKEA CR, BRNO, CZ, dne 17.1.2013, \u010d\xe1stka  2769.00 CZK', 'recipient_message': u'N\xe1kup: IKEA CR, BRNO, CZ, dne 17.1.2013, \u010d\xe1stka  2769.00 CZK', 'user_identifiaction': u'N\xe1kup: IKEA CR, BRNO, CZ, dne 17.1.2013, \u010d\xe1stka  2769.00 CZK', 'currency': 'CZK', 'amount': -2769.0, 'instruction_id': 'XXXXXXXXXX', 'executor': u'Vilém Fusek', 'date': datetime.date(2013, 1, 20), 'type': u'Platba kartou', 'transaction_id': 'XXXXXXXXXX'}
+```
 
-.. code:: python
+Listing transactions from single account statement:
 
-    >>> gen = client.period('2013-01-20', '2013-03-20')
-    >>> list(gen)[0]
-    {
-      'comment': 'N\xe1kup: IKEA CR, BRNO, CZ, dne 17.1.2013, \u010d\xe1stka  2769.00 CZK',
-      'recipient_message': 'N\xe1kup: IKEA CR, BRNO, CZ, dne 17.1.2013, \u010d\xe1stka  2769.00 CZK',
-      'user_identification': 'N\xe1kup: IKEA CR, BRNO, CZ, dne 17.1.2013, \u010d\xe1stka  2769.00 CZK',
-      'currency': 'CZK',
-      'amount': Decimal('-2769.0'),
-      'instruction_id': 'XXXXXXXXXX',
-      'executor': 'Vilém Fusek',
-      'date': datetime.date(2013, 1, 20),
-      'type': 'Platba kartou',
-      'transaction_id': 'XXXXXXXXXX'
-    }
+```python
+>>> client.statement(2013, 1)  # 1 is January only by coincidence - arguments mean 'first statement of 2013'
+```
 
-Listing transactions from a single account statement:
+Listing latest transactions:
 
-.. code:: python
+```python
+>>> client.last()  # return transactions added from last listing
+>>> client.last(from_id='...')  # sets cursor to given transaction_id and returns following transactions
+>>> client.last(from_date='2013-03-01')  # sets cursor to given date and returns following transactions
+```
 
-    >>> client.statement(2013, 1)  # 1 is January only by coincidence - arguments mean 'first statement of 2013'
+Let's send some money:
+```python
+f = open("/tmp/my_abo_file.abo", "r")
+fio.send("abo", "cs", "import.abo", f.read())
+```
 
-Listing the latest transactions:
+**Note:**
+Fio API allows more formats than ABO. I like ABO and I've used [this](https://github.com/hareevs/python-abo-generator) great library for generating.
 
-.. code:: python
+Returns (in case of success)
 
-    >>> client.last()  # return transactions added from last listing
-    >>> client.last(from_id='...')  # sets cursor to given transaction_id and returns following transactions
-    >>> client.last(from_date='2013-03-01')  # sets cursor to given date and returns following transactions
+```python
+{'status': True, 'instruction_id': u'89768892', 'sum': u'1.00'}
+```
 
-Conflict Error
---------------
+or in case of failure
+```python
+{'status': False, 'details': [{'code': 14, 'id': 1, 'message': u'Datum platby je v minulosti'}]}
+```
 
-`Fio API documentation <http://www.fio.cz/docs/cz/API_Bankovnictvi.pdf>`__
-(Section 8.2) states that a single token should be used only once per
-30s. Otherwise, an HTTP 409 Conflict will be returned and
-``fiobank.ThrottlingError`` will be raised.
 
-Contributing
-------------
+For further information [read code](https://github.com/honzajavorek/fiobank/blob/master/fiobank.py).
 
-.. code:: shell
 
-    $ pip install -e .[tests]
-    $ pytest
+## License: ISC
 
-Changelog
----------
+© 2013 Jan Javorek <jan.javorek@gmail.com>
 
-See `GitHub Releases <https://github.com/honzajavorek/fiobank/releases>`_.
-
-License: ISC
-------------
-
-© 2013 Honza Javorek mail@honzajavorek.cz
-
-This work is licensed under the `ISC
-license <https://en.wikipedia.org/wiki/ISC_license>`__.
-
-.. |PyPI version| image:: https://badge.fury.io/py/fiobank.svg
-   :target: https://badge.fury.io/py/fiobank
-.. |Build Status| image:: https://travis-ci.org/honzajavorek/fiobank.svg?branch=master
-   :target: https://travis-ci.org/honzajavorek/fiobank
-.. |Test Coverage| image:: https://coveralls.io/repos/github/honzajavorek/fiobank/badge.svg?branch=master
-   :target: https://coveralls.io/github/honzajavorek/fiobank?branch=master
+This work is licensed under [ISC license](https://en.wikipedia.org/wiki/ISC_license).

@@ -14,7 +14,8 @@ version = "3.1.0"
 
 
 install_requires = [
-    "requests",
+    'requests',
+    'xmltodict>=0.10.1',
 ]
 tests_require = [
     "pytest-runner",
