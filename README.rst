@@ -17,7 +17,7 @@ Usage
 -----
 
 First, `get your API
-token <https://www.fio.cz/ib2/wicket/page/NastaveniPage?3>`__.
+token <https://ib.fio.cz/ib/wicket/page/NastaveniPage?4>`__.
 Initialization of the client:
 
 .. code:: python
