@@ -38,7 +38,7 @@ Account information:
       'bank_code': '2010'
     }
 
-Listing transactions within a time period:
+Listing transactions within a period:
 
 .. code:: python
 
@@ -47,7 +47,7 @@ Listing transactions within a time period:
     {
       'comment': 'N\xe1kup: IKEA CR, BRNO, CZ, dne 17.1.2013, \u010d\xe1stka  2769.00 CZK',
       'recipient_message': 'N\xe1kup: IKEA CR, BRNO, CZ, dne 17.1.2013, \u010d\xe1stka  2769.00 CZK',
-      'user_identifiaction': 'N\xe1kup: IKEA CR, BRNO, CZ, dne 17.1.2013, \u010d\xe1stka  2769.00 CZK',
+      'user_identification': 'N\xe1kup: IKEA CR, BRNO, CZ, dne 17.1.2013, \u010d\xe1stka  2769.00 CZK',
       'currency': 'CZK',
       'amount': -2769.0,
       'instruction_id': 'XXXXXXXXXX',
@@ -63,7 +63,7 @@ Listing transactions from a single account statement:
 
     >>> client.statement(2013, 1)  # 1 is January only by coincidence - arguments mean 'first statement of 2013'
 
-Listing latest transactions:
+Listing the latest transactions:
 
 .. code:: python
 
@@ -76,7 +76,7 @@ Conflict Error
 
 `Fio API documentation <http://www.fio.cz/docs/cz/API_Bankovnictvi.pdf>`__
 (Section 8.2) states that a single token should be used only once per
-30s. Otherwise a HTTP 409 Conflict will be returned and
+30s. Otherwise, an HTTP 409 Conflict will be returned and
 ``fiobank.ThrottlingError`` will be raised.
 
 Contributing
@@ -97,7 +97,7 @@ License: ISC
 
 © 2013 Honza Javorek mail@honzajavorek.cz
 
-This work is licensed under `ISC
+This work is licensed under the `ISC
 license <https://en.wikipedia.org/wiki/ISC_license>`__.
 
 .. |PyPI version| image:: https://badge.fury.io/py/fiobank.svg
