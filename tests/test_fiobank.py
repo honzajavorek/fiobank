@@ -129,7 +129,7 @@ def test_transactions_integration(client, method, args, kwargs):
             'variable_symbol', 'specific_symbol', 'user_identification',
             'recipient_message', 'type', 'executor', 'specification',
             'comment', 'instruction_id', 'account_number_full',
-            'original_amount', 'original_currency',
+            'original_amount', 'original_currency', 'reference',
         ])
 
     assert count > 0
