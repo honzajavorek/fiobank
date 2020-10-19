@@ -64,6 +64,7 @@ class FioBank(object):
         'column22': ('transaction_id', str),
         'column25': ('comment', str),
         'column26': ('bic', str),
+        'column27': ('reference', str),
     }
 
     info_schema = {
