@@ -4,10 +4,6 @@ python:
   - "3.6"
   - "3.7"
   - "3.8"
-env:
-  global:  # 'travis encrypt PYPI_PASSWORD=... GH_TOKEN=...'
-    - PYPI_USERNAME=honzajavorek
-    - secure: "fjvWMrCuRVznTg72qSofo6kDpVGnXKqOl/80Yt+J3gNUuMw1PnjE/PUkmVPjfYQWNEWaiu3pEb9DaqG4ZD3DQZZIb0GCF/geIKmZYaRE2sIaAMoSbwMjhxEabVHtWJoMfldN/qtz09beGRvWcywz/WcPnWCCxBhkWojfNhN7hrQ="
 install:
   - "pip install -e .[tests,release]"
 script:
@@ -15,4 +11,4 @@ script:
   - "pytest --cov-report="
 after_success:
   - "coveralls"
-  - "python setup.py publish"
+  - "python setup.py publish"  # needs PYPI_USERNAME, PYPI_PASSWORD, GH_TOKEN
