@@ -33,7 +33,7 @@ class ThrottlingError(Exception):
 
 class FioBank(object):
 
-    base_url = 'https://www.fio.cz/ib_api/rest/'
+    base_url = 'https://fioapi.fio.cz/v1/rest/'
 
     actions = {
         'periods': 'periods/{token}/{from_date}/{to_date}/transactions.json',
