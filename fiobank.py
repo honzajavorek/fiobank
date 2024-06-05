@@ -1,5 +1,6 @@
 import re
 from datetime import datetime, date
+from decimal import Decimal
 
 import requests
 
@@ -46,7 +47,7 @@ class FioBank(object):
     # http://www.fio.cz/xsd/IBSchema.xsd
     transaction_schema = {
         'column0': ('date', coerce_date),
-        'column1': ('amount', float),
+        'column1': ('amount', Decimal),
         'column2': ('account_number', str),
         'column3': ('bank_code', str),
         'column4': ('constant_symbol', str),
@@ -73,7 +74,7 @@ class FioBank(object):
         'currency': ('currency', str),
         'iban': ('iban', str),
         'bic': ('bic', str),
-        'closingbalance': ('balance', float),
+        'closingbalance': ('balance', Decimal),
     }
 
     _amount_re = re.compile(r'\-?\d+(\.\d+)? [A-Z]{3}')
@@ -92,7 +93,7 @@ class FioBank(object):
         response.raise_for_status()
 
         if response.content:
-            return response.json()
+            return response.json(parse_float=Decimal)
         return None
 
     def _parse_info(self, data):
@@ -137,7 +138,7 @@ class FioBank(object):
             is_amount = self._amount_re.match
             if specification is not None and is_amount(specification):
                 amount, currency = trans['specification'].split(' ')
-                trans['original_amount'] = float(amount)
+                trans['original_amount'] = Decimal(amount)
                 trans['original_currency'] = currency
             else:
                 trans['original_amount'] = None
