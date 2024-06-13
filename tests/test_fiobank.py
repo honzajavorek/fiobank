@@ -18,19 +18,25 @@ def token():
 
 
 @pytest.fixture(scope="function")
+def transactions_text():
+    with open((os.path.dirname(__file__) + "/transactions.json")) as f:
+        return f.read()
+
+
+@pytest.fixture()
 def transactions_json():
     with open((os.path.dirname(__file__) + "/transactions.json")) as f:
         return json.load(f)
 
 
-@pytest.yield_fixture(scope="function")
-def client(token, transactions_json):
+@pytest.fixture()
+def client(token, transactions_text):
     with responses.RequestsMock(assert_all_requests_are_fired=False) as resps:
         url = re.compile(
             re.escape(FioBank.base_url)
             + r"[^/]+/{token}/([^/]+/)*transactions\.json".format(token=token)
         )
-        resps.add(responses.GET, url, json=transactions_json)
+        resps.add(responses.GET, url, body=transactions_text)
 
         url = re.compile(
             re.escape(FioBank.base_url)
@@ -236,14 +242,14 @@ def test_transaction_schema_is_complete():
         column_name = "column{}".format(match.group(1))
         columns_in_xsd.add(column_name)
 
-    assert frozenset(FioBank.transaction_schema.keys()) == columns_in_xsd
+    assert frozenset(FioBank("...").transaction_schema.keys()) == columns_in_xsd
 
 
 @pytest.mark.parametrize(
     "api_key,sdk_key,sdk_type",
     [
         (api_key, sdk_key, sdk_type)
-        for api_key, (sdk_key, sdk_type) in FioBank.transaction_schema.items()
+        for api_key, (sdk_key, sdk_type) in FioBank("...").transaction_schema.items()
     ],
 )
 def test_transactions_parse(transactions_json, api_key, sdk_key, sdk_type):
