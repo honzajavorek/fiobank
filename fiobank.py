@@ -1,6 +1,7 @@
 from decimal import Decimal
 import re
 from datetime import datetime, date
+import warnings
 
 import requests
 
@@ -47,7 +48,19 @@ class FioBank(object):
 
     def __init__(self, token, decimal=False):
         self.token = token
-        self.float_type = Decimal if decimal else float
+
+        if decimal:
+            self.float_type = Decimal
+        else:
+            warnings.warn(
+                (
+                    "Using float for money can cause inaccuracies. "
+                    "Use FioBank(..., decimal=True) for Decimal objects instead. "
+                    "This will be the default in the future versions."
+                ),
+                DeprecationWarning,
+            )
+            self.float_type = float
 
         # http://www.fio.cz/xsd/IBSchema.xsd
         self.transaction_schema = {

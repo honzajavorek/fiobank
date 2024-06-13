@@ -1,5 +1,9 @@
 # Changelog
 
+## master
+### Fix
+* Added deprecation warning for decimal=False
+
 ## v3.1.0 (2024-06-13)
 ### Features
 * Updated base URL for the API as requested by the API provider
