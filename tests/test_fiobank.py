@@ -1,14 +1,15 @@
 from unittest import mock
-
 import re
 import os
 import uuid
 import json
 from datetime import date
+from decimal import Decimal
 
 import pytest
 import requests
 import responses
+
 from fiobank import FioBank
 
 
@@ -23,7 +24,7 @@ def transactions_json():
         return json.load(f)
 
 
-@pytest.yield_fixture(scope='function')
+@pytest.fixture(scope='function')
 def client(token, transactions_json):
     with responses.RequestsMock(assert_all_requests_are_fired=False) as resps:
         url = re.compile(
@@ -71,7 +72,7 @@ def test_info_is_case_insensitive(transactions_json):
     assert sdk_info['account_number'] == value
 
 
-@pytest.mark.parametrize('api_key,sdk_key', [
+@pytest.mark.parametrize('api_key, sdk_key', [
     ('accountId', 'account_number'),
     ('bankId', 'bank_code'),
     ('currency', 'currency'),
@@ -233,6 +234,23 @@ def test_transactions_parse(transactions_json, api_key, sdk_key, sdk_type):
         )
 
 
+@pytest.mark.parametrize('amount, expected', [
+    (42, Decimal('42')),
+    (0, Decimal('0')),
+    (-353.2933, Decimal('-353.2933')),
+    (3.14, Decimal('3.14')),
+])
+def test_transactions_parse_amount(transactions_json, amount, expected):
+    client = FioBank('...')
+
+    api_transaction = transactions_json['accountStatement']['transactionList']['transaction'][0]  # NOQA
+    api_transaction['column1'] = amount
+
+    sdk_transaction = list(client._parse_transactions(transactions_json))[0]
+
+    assert sdk_transaction['amount'] == expected
+
+
 def test_transactions_parse_unsanitized(transactions_json):
     client = FioBank('...')
 
@@ -287,9 +305,9 @@ def test_amount_re(test_input):
 
 
 @pytest.mark.parametrize('test_input,amount,currency', [
-    ('650.00 HRK', 650.0, 'HRK'),
-    ('-308 EUR', -308.0, 'EUR'),
-    ('46052.01 HUF', 46052.01, 'HUF'),
+    ('650.00 HRK', Decimal('650.00'), 'HRK'),
+    ('-308 EUR', Decimal('-308'), 'EUR'),
+    ('46052.01 HUF', Decimal('46052.01'), 'HUF'),
 ])
 def test_transactions_parse_amount(transactions_json, test_input,
                                    amount, currency):

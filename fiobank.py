@@ -1,10 +1,19 @@
 import re
+from decimal import Decimal
 from datetime import datetime, date
 
 import requests
 
 
 __all__ = ('FioBank', 'ThrottlingError')
+
+
+def coerce_amount(value):
+    if isinstance(value, int):
+        return Decimal(value)
+    if isinstance(value, float):
+        return Decimal(str(value))
+    raise ValueError(value)
 
 
 def coerce_date(value):
@@ -46,7 +55,7 @@ class FioBank(object):
     # http://www.fio.cz/xsd/IBSchema.xsd
     transaction_schema = {
         'column0': ('date', coerce_date),
-        'column1': ('amount', float),
+        'column1': ('amount', coerce_amount),
         'column2': ('account_number', str),
         'column3': ('bank_code', str),
         'column4': ('constant_symbol', str),
@@ -137,7 +146,7 @@ class FioBank(object):
             is_amount = self._amount_re.match
             if specification is not None and is_amount(specification):
                 amount, currency = trans['specification'].split(' ')
-                trans['original_amount'] = float(amount)
+                trans['original_amount'] = Decimal(amount)
                 trans['original_currency'] = currency
             else:
                 trans['original_amount'] = None
