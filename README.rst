@@ -16,14 +16,16 @@ Installation
 Usage
 -----
 
-First, `get your API
-token <https://ib.fio.cz/ib/wicket/page/NastaveniPage?4>`__.
+First, get your API token.
+
+.. image:: token.png
+
 Initialization of the client:
 
 .. code:: python
 
     >>> from fiobank import FioBank
-    >>> client = FioBank(token='...')
+    >>> client = FioBank(token='...', decimal=True)
 
 Account information:
 
@@ -33,7 +35,7 @@ Account information:
     {
       'currency': 'CZK',
       'account_number_full': 'XXXXXXXXXX/2010',
-      'balance': 42.00,
+      'balance': Decimal('42.00'),
       'account_number': 'XXXXXXXXXX',
       'bank_code': '2010'
     }
@@ -49,7 +51,7 @@ Listing transactions within a period:
       'recipient_message': 'N\xe1kup: IKEA CR, BRNO, CZ, dne 17.1.2013, \u010d\xe1stka  2769.00 CZK',
       'user_identification': 'N\xe1kup: IKEA CR, BRNO, CZ, dne 17.1.2013, \u010d\xe1stka  2769.00 CZK',
       'currency': 'CZK',
-      'amount': -2769.0,
+      'amount': Decimal('-2769.0'),
       'instruction_id': 'XXXXXXXXXX',
       'executor': 'Vilém Fusek',
       'date': datetime.date(2013, 1, 20),
