@@ -1,3 +1,4 @@
+from decimal import Decimal
 from unittest import mock
 
 import re
@@ -30,7 +31,7 @@ def transactions_json():
 
 
 @pytest.fixture()
-def client(token, transactions_text):
+def client_float(token, transactions_text):
     with responses.RequestsMock(assert_all_requests_are_fired=False) as resps:
         url = re.compile(
             re.escape(FioBank.base_url)
@@ -47,8 +48,35 @@ def client(token, transactions_text):
         yield FioBank(token)
 
 
-def test_info_integration(client):
-    assert frozenset(client.info().keys()) == frozenset(
+@pytest.fixture()
+def client_decimal(token, transactions_text):
+    with responses.RequestsMock(assert_all_requests_are_fired=False) as resps:
+        url = re.compile(
+            re.escape(FioBank.base_url)
+            + r"[^/]+/{token}/([^/]+/)*transactions\.json".format(token=token)
+        )
+        resps.add(responses.GET, url, body=transactions_text)
+
+        url = re.compile(
+            re.escape(FioBank.base_url)
+            + r"set-last-\w+/{token}/[^/]+/".format(token=token)
+        )
+        resps.add(responses.GET, url)
+
+        yield FioBank(token, decimal=True)
+
+
+def test_client_decimal(client_decimal):
+    transaction = next(client_decimal.last())
+    info = client_decimal.info()
+
+    assert client_decimal.float_type is Decimal
+    assert transaction["amount"] == Decimal("-130.0")
+    assert info["balance"] == Decimal("2060.52")
+
+
+def test_info_integration(client_float):
+    assert frozenset(client_float.info().keys()) == frozenset(
         [
             "account_number_full",
             "account_number",
@@ -136,8 +164,8 @@ def test_info_parse_no_account_number_full(transactions_json):
         ("last", [], {"from_date": "2016-08-04"}),
     ],
 )
-def test_transactions_integration(client, method, args, kwargs):
-    gen = getattr(client, method)(*args, **kwargs)
+def test_transactions_integration(client_float, method, args, kwargs):
+    gen = getattr(client_float, method)(*args, **kwargs)
 
     count = 0
     for record in gen:
@@ -349,8 +377,35 @@ def test_amount_re(test_input):
         ("46052.01 HUF", 46052.01, "HUF"),
     ],
 )
-def test_transactions_parse_amount(transactions_json, test_input, amount, currency):
+def test_transactions_parse_amount_as_float(
+    transactions_json, test_input, amount, currency
+):
     client = FioBank("...")
+
+    api_transaction = transactions_json["accountStatement"]["transactionList"][
+        "transaction"
+    ][0]  # NOQA
+    api_transaction["column18"] = {"value": test_input}
+
+    sdk_transaction = list(client._parse_transactions(transactions_json))[0]
+
+    assert sdk_transaction["specification"] == test_input
+    assert sdk_transaction["original_amount"] == amount
+    assert sdk_transaction["original_currency"] == currency
+
+
+@pytest.mark.parametrize(
+    "test_input,amount,currency",
+    [
+        ("650.00 HRK", Decimal("650.0"), "HRK"),
+        ("-308 EUR", Decimal("-308.0"), "EUR"),
+        ("46052.01 HUF", Decimal("46052.01"), "HUF"),
+    ],
+)
+def test_transactions_parse_amount_as_decimal(
+    transactions_json, test_input, amount, currency
+):
+    client = FioBank("...", decimal=True)
 
     api_transaction = transactions_json["accountStatement"]["transactionList"][
         "transaction"

@@ -1,3 +1,4 @@
+from decimal import Decimal
 import re
 from datetime import datetime, date
 
@@ -44,14 +45,14 @@ class FioBank(object):
 
     _amount_re = re.compile(r"\-?\d+(\.\d+)? [A-Z]{3}")
 
-    def __init__(self, token, float_type=float):
+    def __init__(self, token, decimal=False):
         self.token = token
-        self.float_type = float_type
+        self.float_type = Decimal if decimal else float
 
         # http://www.fio.cz/xsd/IBSchema.xsd
         self.transaction_schema = {
             "column0": ("date", coerce_date),
-            "column1": ("amount", float_type),
+            "column1": ("amount", self.float_type),
             "column2": ("account_number", str),
             "column3": ("bank_code", str),
             "column4": ("constant_symbol", str),
@@ -77,7 +78,7 @@ class FioBank(object):
             "currency": ("currency", str),
             "iban": ("iban", str),
             "bic": ("bic", str),
-            "closingbalance": ("balance", float_type),
+            "closingbalance": ("balance", self.float_type),
         }
 
     def _request(self, action, **params):
