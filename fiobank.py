@@ -1,5 +1,6 @@
 from decimal import Decimal
 import re
+from decimal import Decimal
 from datetime import datetime, date
 import warnings
 
@@ -7,6 +8,14 @@ import requests
 
 
 __all__ = ("FioBank", "ThrottlingError")
+
+
+def coerce_amount(value):
+    if isinstance(value, int):
+        return Decimal(value)
+    if isinstance(value, float):
+        return Decimal(str(value))
+    raise ValueError(value)
 
 
 def coerce_date(value):

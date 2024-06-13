@@ -1,15 +1,16 @@
 from decimal import Decimal
 from unittest import mock
-
 import re
 import os
 import uuid
 import json
 from datetime import date
+from decimal import Decimal
 
 import pytest
 import requests
 import responses
+
 from fiobank import FioBank
 
 
@@ -113,7 +114,7 @@ def test_info_is_case_insensitive(transactions_json):
 
 
 @pytest.mark.parametrize(
-    "api_key,sdk_key",
+    "api_key, sdk_key",
     [
         ("accountId", "account_number"),
         ("bankId", "bank_code"),
@@ -154,7 +155,7 @@ def test_info_parse_no_account_number_full(transactions_json):
 
 
 @pytest.mark.parametrize(
-    "method,args,kwargs",
+    "method, args, kwargs",
     [
         ("period", [date(2016, 8, 4), date(2016, 8, 30)], {}),
         ("period", ["2016-08-04", "2016-08-30"], {}),
@@ -274,7 +275,7 @@ def test_transaction_schema_is_complete():
 
 
 @pytest.mark.parametrize(
-    "api_key,sdk_key,sdk_type",
+    "api_key, sdk_key, sdk_type",
     [
         (api_key, sdk_key, sdk_type)
         for api_key, (sdk_key, sdk_type) in FioBank("...").transaction_schema.items()
@@ -303,6 +304,23 @@ def test_transactions_parse(transactions_json, api_key, sdk_key, sdk_type):
         sdk_transaction = sdk_transactions[i]
 
         assert sdk_transaction[sdk_key] == sdk_type(api_transaction[api_key]["value"])
+
+
+@pytest.mark.parametrize('amount, expected', [
+    (42, Decimal('42')),
+    (0, Decimal('0')),
+    (-353.2933, Decimal('-353.2933')),
+    (3.14, Decimal('3.14')),
+])
+def test_transactions_parse_amount(transactions_json, amount, expected):
+    client = FioBank('...')
+
+    api_transaction = transactions_json['accountStatement']['transactionList']['transaction'][0]  # NOQA
+    api_transaction['column1'] = amount
+
+    sdk_transaction = list(client._parse_transactions(transactions_json))[0]
+
+    assert sdk_transaction['amount'] == expected
 
 
 def test_transactions_parse_unsanitized(transactions_json):
@@ -370,7 +388,7 @@ def test_amount_re(test_input):
 
 
 @pytest.mark.parametrize(
-    "test_input,amount,currency",
+    "test_input, amount, currency",
     [
         ("650.00 HRK", 650.0, "HRK"),
         ("-308 EUR", -308.0, "EUR"),
@@ -395,7 +413,7 @@ def test_transactions_parse_amount_as_float(
 
 
 @pytest.mark.parametrize(
-    "test_input,amount,currency",
+    "test_input, amount, currency",
     [
         ("650.00 HRK", Decimal("650.0"), "HRK"),
         ("-308 EUR", Decimal("-308.0"), "EUR"),
