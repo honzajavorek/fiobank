@@ -1,6 +1,9 @@
 # Changelog
 
-## master
+## v4.0.0 (master)
+### Breaking
+* Dropped support for Python 3.6 and 3.7
+
 ### Fix
 * Added deprecation warning for decimal=False
 
@@ -22,7 +25,7 @@
 * Add support for column27
 
 ### Breaking
-* The fiobank library no longer supports Python 3.5
+* Dropped support for Python 3.5
 
 ### Documentation
 * Fix user_identifiaction and few other grammarly suggestions
