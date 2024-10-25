@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 from decimal import Decimal
 import re
+from typing import Generator
 from datetime import datetime, date
 import warnings
 
@@ -124,7 +127,7 @@ class FioBank(object):
         # return data
         return info
 
-    def _parse_transactions(self, data):
+    def _parse_transactions(self, data: dict) -> Generator[dict]:
         schema = self.transaction_schema
         try:
             entries = data["accountStatement"]["transactionList"]["transaction"]  # NOQA
@@ -177,17 +180,24 @@ class FioBank(object):
         data = self._request("periods", from_date=today, to_date=today)
         return self._parse_info(data)
 
-    def period(self, from_date, to_date):
-        data = self._request(
+    def _fetch_period(self, from_date: str | date | datetime, to_date:  str | date | datetime) -> dict:
+        return self._request(
             "periods", from_date=coerce_date(from_date), to_date=coerce_date(to_date)
         )
+
+    def period(self, from_date: str | date | datetime, to_date:  str | date | datetime) -> Generator[dict]:
+        data = self._fetch_period(from_date, to_date)
         return self._parse_transactions(data)
+
+    def transactions(self, from_date: str | date | datetime, to_date:  str | date | datetime) -> tuple[dict, Generator[dict]]:
+        data = self._fetch_period(from_date, to_date)
+        return (self._parse_info(data), self._parse_transactions(data))
 
     def statement(self, year, number):
         data = self._request("by-id", year=year, number=number)
         return self._parse_transactions(data)
 
-    def last(self, from_id=None, from_date=None):
+    def _fetch_last(self, from_id: str | None=None, from_date : str | date | datetime | None=None) -> dict:
         if from_id and from_date:
             raise ValueError("Only one constraint is allowed.")
 
@@ -196,4 +206,12 @@ class FioBank(object):
         elif from_date:
             self._request("set-last-date", from_date=coerce_date(from_date))
 
-        return self._parse_transactions(self._request("last"))
+        return self._request("last")
+
+
+    def last(self, from_id: str | None=None, from_date : str | date | datetime | None=None) -> Generator[dict]:
+        return self._parse_transactions(self._fetch_last(from_id, from_date))
+
+    def last_transactions(self, from_id: str | None=None, from_date : str | date | datetime | None=None) -> tuple[dict, Generator[dict]]:
+        data = self._fetch_last(from_id, from_date)
+        return (self._parse_info(data), self._parse_transactions(data))

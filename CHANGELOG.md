@@ -4,6 +4,9 @@
 ### Breaking
 * Dropped support for Python 3.6 and 3.7
 
+### Features
+* Added transactions API to fetch account info and transactions in one call
+
 ### Fix
 * Added deprecation warning for decimal=False
 
