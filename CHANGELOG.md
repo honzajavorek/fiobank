@@ -2,7 +2,7 @@
 
 ## v4.0.0 (master)
 ### Breaking
-* Dropped support for Python 3.6 and 3.7
+* Dropped support for Python 3.6, 3.7 and 3.8
 
 ### Fix
 * Added deprecation warning for decimal=False
@@ -11,6 +11,7 @@
 * Re-introduced CI tests
 * Re-introduced Dependabot
 * Updated .gitignore
+* Added support for Python 3.13
 
 ## v3.1.0 (2024-06-13)
 ### Features
