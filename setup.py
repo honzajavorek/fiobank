@@ -19,7 +19,6 @@ install_requires = [
 tests_require = [
     "pytest-runner",
     "pytest",
-    "pylama",
     "responses",
     "mock",
     "coveralls",
