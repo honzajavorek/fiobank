@@ -17,5 +17,5 @@ jobs:
         run: uv build
 
       - name: Publish package
-        if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags') && github.repository == 'WeblateOrg/language-data'
+        if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags') && github.repository == 'honzajavorek/fiobank'
         run: uv publish --trusted-publishing always
