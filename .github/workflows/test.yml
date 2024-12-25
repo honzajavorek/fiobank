@@ -24,8 +24,10 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - uses: astral-sh/setup-uv@v3
+
       - name: Install
-        run: pip install -e .[tests]
+        run: uv pip install --system -e .[tests]
 
       - name: Test
         run: pytest
