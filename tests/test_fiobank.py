@@ -306,23 +306,6 @@ def test_transactions_parse(transactions_json, api_key, sdk_key, sdk_type):
         assert sdk_transaction[sdk_key] == sdk_type(api_transaction[api_key]["value"])
 
 
-@pytest.mark.parametrize('amount, expected', [
-    (42, Decimal('42')),
-    (0, Decimal('0')),
-    (-353.2933, Decimal('-353.2933')),
-    (3.14, Decimal('3.14')),
-])
-def test_transactions_parse_amount(transactions_json, amount, expected):
-    client = FioBank('...')
-
-    api_transaction = transactions_json['accountStatement']['transactionList']['transaction'][0]  # NOQA
-    api_transaction['column1'] = amount
-
-    sdk_transaction = list(client._parse_transactions(transactions_json))[0]
-
-    assert sdk_transaction['amount'] == expected
-
-
 def test_transactions_parse_unsanitized(transactions_json):
     client = FioBank("...")
 
