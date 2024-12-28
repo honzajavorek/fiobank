@@ -3,9 +3,7 @@ name = "fiobank"
 version = "4.0.0"
 description = "Fio Bank API in Python (unofficial)"
 readme = "README.rst"
-authors = [
-    {name = "Honza Javorek", email = "mail@honzajavorek.cz"},
-]
+authors = [{name = "Honza Javorek", email = "mail@honzajavorek.cz"}]
 license = {text = "ICS"}
 requires-python = "<4.0,>=3.9"
 dependencies = [
@@ -38,6 +36,7 @@ pythonpath = ["."]
 testpaths = "tests"
 norecursedirs = "env venv .git"
 addopts = "--ff --ruff --ruff-format"
+filterwarnings = ["ignore:Using float for money can cause inaccuracies:DeprecationWarning"]
 
 [tool.ruff.lint]
 extend-select = ["I"]
