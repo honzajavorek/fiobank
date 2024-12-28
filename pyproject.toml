@@ -29,9 +29,19 @@ dev = [
     "pytest<8.0.0,>=7.2.1",
     "responses<1.0.0,>=0.22.0",
     "mock<6.0.0,>=5.0.1",
+    "ruff<1.0.0,>=0.8.4",
+    "pytest-ruff<1.0.0,>=0.4.1",
 ]
 
 [tool.pytest.ini_options]
+pythonpath = ["."]
 testpaths = "tests"
 norecursedirs = "env venv .git"
-pythonpath = ["."]
+addopts = "--ff --ruff --ruff-format"
+
+[tool.ruff.lint]
+extend-select = ["I"]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+lines-after-imports = 2
