@@ -16,6 +16,13 @@ jobs:
       - name: Build
         run: uv build
 
+      - name: Smoke Test
+        run: |
+          uv venv .smoketest
+          uv pip install --python=.smoketest/bin/python ./dist/fiobank-*.tar.gz
+          .smoketest/bin/python -c 'from fiobank import FioBank'
+          rm -r .smoketest
+
       - name: Publish package
         if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags') && github.repository == 'honzajavorek/fiobank'
         run: uv publish --trusted-publishing always

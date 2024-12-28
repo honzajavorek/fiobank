@@ -129,6 +129,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.smoketest/
 
 # Spyder project settings
 .spyderproject
@@ -153,3 +154,6 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# pytest
+.pytest_cache

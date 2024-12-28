@@ -1,15 +1,15 @@
+import json
+import os
+import re
+import uuid
+from datetime import date
 from decimal import Decimal
 from unittest import mock
-
-import re
-import os
-import uuid
-import json
-from datetime import date
 
 import pytest
 import requests
 import responses
+
 from fiobank import FioBank
 
 
@@ -113,7 +113,7 @@ def test_info_is_case_insensitive(transactions_json):
 
 
 @pytest.mark.parametrize(
-    "api_key,sdk_key",
+    "api_key, sdk_key",
     [
         ("accountId", "account_number"),
         ("bankId", "bank_code"),
@@ -154,7 +154,7 @@ def test_info_parse_no_account_number_full(transactions_json):
 
 
 @pytest.mark.parametrize(
-    "method,args,kwargs",
+    "method, args, kwargs",
     [
         ("period", [date(2016, 8, 4), date(2016, 8, 30)], {}),
         ("period", ["2016-08-04", "2016-08-30"], {}),
@@ -274,7 +274,7 @@ def test_transaction_schema_is_complete():
 
 
 @pytest.mark.parametrize(
-    "api_key,sdk_key,sdk_type",
+    "api_key, sdk_key, sdk_type",
     [
         (api_key, sdk_key, sdk_type)
         for api_key, (sdk_key, sdk_type) in FioBank("...").transaction_schema.items()
@@ -370,7 +370,7 @@ def test_amount_re(test_input):
 
 
 @pytest.mark.parametrize(
-    "test_input,amount,currency",
+    "test_input, amount, currency",
     [
         ("650.00 HRK", 650.0, "HRK"),
         ("-308 EUR", -308.0, "EUR"),
@@ -395,7 +395,7 @@ def test_transactions_parse_amount_as_float(
 
 
 @pytest.mark.parametrize(
-    "test_input,amount,currency",
+    "test_input, amount, currency",
     [
         ("650.00 HRK", Decimal("650.0"), "HRK"),
         ("-308 EUR", Decimal("-308.0"), "EUR"),

@@ -27,7 +27,7 @@ jobs:
       - uses: astral-sh/setup-uv@v5
 
       - name: Install
-        run: uv pip install --system -e .[tests]
+        run: uv sync
 
       - name: Test
-        run: pytest
+        run: uv run pytest
