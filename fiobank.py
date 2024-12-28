@@ -4,6 +4,12 @@ from datetime import date, datetime
 from decimal import Decimal
 
 import requests
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_random_exponential,
+)
 
 
 __all__ = ("FioBank", "ThrottlingError")
@@ -35,10 +41,10 @@ def sanitize_value(value, convert=None):
 
 
 class ThrottlingError(Exception):
-    """Throttling error raised when api is being used too fast."""
+    """Throttling error raised when the API is being used too fast."""
 
     def __str__(self):
-        return "Token should be used only once per 30s."
+        return "Token can be used only once per 30s."
 
 
 class FioBank(object):
@@ -102,14 +108,19 @@ class FioBank(object):
             "closingbalance": ("balance", self.float_type),
         }
 
+    @retry(
+        retry=retry_if_exception_type(ThrottlingError),
+        reraise=True,
+        stop=stop_after_attempt(3),
+        wait=wait_random_exponential(max=2 * 60),
+    )
     def _request(self, action, **params):
-        template = self.base_url + self.actions[action]
-        url = template.format(token=self.token, **params)
+        url_template = self.base_url + self.actions[action]
+        url = url_template.format(token=self.token, **params)
 
         response = requests.get(url)
         if response.status_code == requests.codes["conflict"]:
             raise ThrottlingError()
-
         response.raise_for_status()
 
         if response.content:

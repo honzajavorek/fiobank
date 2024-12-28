@@ -9,29 +9,30 @@ from unittest import mock
 import pytest
 import requests
 import responses
+from responses.registries import OrderedRegistry
 
 from fiobank import FioBank
 
 
 @pytest.fixture()
-def token():
+def token() -> uuid.UUID:
     return uuid.uuid4()
 
 
 @pytest.fixture()
-def transactions_text():
+def transactions_text() -> str:
     with open((os.path.dirname(__file__) + "/transactions.json")) as f:
         return f.read()
 
 
 @pytest.fixture()
-def transactions_json():
+def transactions_json() -> dict:
     with open((os.path.dirname(__file__) + "/transactions.json")) as f:
         return json.load(f)
 
 
 @pytest.fixture()
-def client_float(token, transactions_text):
+def client_float(token: uuid.UUID, transactions_text: str):
     with responses.RequestsMock(assert_all_requests_are_fired=False) as resps:
         url = re.compile(
             re.escape(FioBank.base_url)
@@ -49,7 +50,7 @@ def client_float(token, transactions_text):
 
 
 @pytest.fixture()
-def client_decimal(token, transactions_text):
+def client_decimal(token: uuid.UUID, transactions_text: str):
     with responses.RequestsMock(assert_all_requests_are_fired=False) as resps:
         url = re.compile(
             re.escape(FioBank.base_url)
@@ -66,7 +67,7 @@ def client_decimal(token, transactions_text):
         yield FioBank(token, decimal=True)
 
 
-def test_client_decimal(client_decimal):
+def test_client_decimal(client_decimal: FioBank):
     transaction = next(client_decimal.last())
     info = client_decimal.info()
 
@@ -75,7 +76,7 @@ def test_client_decimal(client_decimal):
     assert info["balance"] == Decimal("2060.52")
 
 
-def test_info_integration(client_float):
+def test_info_integration(client_float: FioBank):
     assert frozenset(client_float.info().keys()) == frozenset(
         [
             "account_number_full",
@@ -89,12 +90,11 @@ def test_info_integration(client_float):
     )
 
 
-def test_info_uses_today(transactions_json):
+def test_info_uses_today(transactions_json: dict):
     client = FioBank("...")
     today = date.today()
 
-    options = {"return_value": transactions_json}
-    with mock.patch.object(client, "_request", **options) as stub:
+    with mock.patch.object(client, "_request", return_value=transactions_json) as stub:
         client.info()
         stub.assert_called_once_with("periods", from_date=today, to_date=today)
 
@@ -445,3 +445,17 @@ def test_transactions_parse_no_account_number_full(transactions_json):
     sdk_transaction = list(client._parse_transactions(transactions_json))[0]
 
     assert sdk_transaction["account_number_full"] is None
+
+
+def test_409_conflict(token: uuid.UUID, transactions_text: str):
+    with responses.RequestsMock(registry=OrderedRegistry) as resps:
+        url = re.compile(
+            re.escape(FioBank.base_url)
+            + r"[^/]+/{token}/([^/]+/)*transactions\.json".format(token=token)
+        )
+        resps.add(responses.GET, url, status=409)
+        resps.add(responses.GET, url, body=transactions_text)
+        client = FioBank(token, decimal=True)
+        transaction = next(client.last())
+
+    assert transaction["amount"] == Decimal("-130.0")
