@@ -28,7 +28,7 @@ def test_sanitize_value_no_effect(test_input: Any, expected: Any):
         ("\nfio    ", "fio"),
     ],
 )
-def test_sanitize_value_strip(test_input: str, expected: str | None):
+def test_sanitize_value_strip(test_input: str, expected: "str | None"):
     assert sanitize_value(test_input) == expected
 
 

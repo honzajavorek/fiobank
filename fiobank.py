@@ -16,7 +16,7 @@ from tenacity import (
 __all__ = ("FioBank", "ThrottlingError")
 
 
-def coerce_amount(value: int | float) -> Decimal:
+def coerce_amount(value: "int | float") -> Decimal:
     if isinstance(value, int):
         return Decimal(value)
     if isinstance(value, float):
@@ -24,7 +24,7 @@ def coerce_amount(value: int | float) -> Decimal:
     raise ValueError(value)
 
 
-def coerce_date(value: datetime | date | str):
+def coerce_date(value: "datetime | date | str") -> date:
     if isinstance(value, datetime):
         return value.date()
     elif isinstance(value, date):
@@ -33,7 +33,7 @@ def coerce_date(value: datetime | date | str):
         return datetime.strptime(value[:10], "%Y-%m-%d").date()
 
 
-def sanitize_value(value: Any, convert: Callable | None = None) -> Any:
+def sanitize_value(value: Any, convert: "Callable | None" = None) -> Any:
     if isinstance(value, str):
         value = value.strip() or None
     if convert and value is not None:
@@ -199,7 +199,7 @@ class FioBank(object):
         raise ValueError("No data available")
 
     def period(
-        self, from_date: date | datetime | str, to_date: date | datetime | str
+        self, from_date: "date | datetime | str", to_date: "date | datetime | str"
     ) -> Generator[dict, None, None]:
         if data := self._request(
             "periods", from_date=coerce_date(from_date), to_date=coerce_date(to_date)
@@ -213,7 +213,9 @@ class FioBank(object):
         raise ValueError("No data available")
 
     def last(
-        self, from_id: int | None = None, from_date: date | datetime | str | None = None
+        self,
+        from_id: "int | None" = None,
+        from_date: "date | datetime | str | None" = None,
     ) -> Generator[dict, None, None]:
         if from_id and from_date:
             raise ValueError("Only one constraint is allowed.")
