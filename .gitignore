@@ -155,5 +155,6 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-# pytest
+# pytest, ruff
 .pytest_cache
+.ruff_cache
