@@ -86,15 +86,15 @@ Conflict Error
 Development
 -----------
 
-Install using `poetry <https://python-poetry.org/>`_::
+Install using `uv <https://docs.astral.sh/uv/>`_::
 
     git clone git@github.com:honzajavorek/fiobank.git
     cd fiobank
-    poetry install
+    uv sync
 
 Then run tests::
 
-    pytest
+    uv run pytest
 
 License: ISC
 ------------
