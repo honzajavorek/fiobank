@@ -4,9 +4,8 @@ from fiobank import sanitize_value
 
 
 @pytest.mark.parametrize(
-    "test_input,expected",
+    "test_input, expected",
     [
-        ("", ""),
         ("fio", "fio"),
         (0, 0),
         (False, False),
@@ -16,22 +15,23 @@ from fiobank import sanitize_value
     ],
 )
 def test_sanitize_value_no_effect(test_input, expected):
-    sanitize_value(test_input) == expected
+    assert sanitize_value(test_input) == expected
 
 
 @pytest.mark.parametrize(
-    "test_input,expected",
+    "test_input, expected",
     [
-        ("     \n     ", ""),
+        ("", None),
+        ("     \n     ", None),
         ("\nfio    ", "fio"),
     ],
 )
 def test_sanitize_value_strip(test_input, expected):
-    sanitize_value(test_input) == expected
+    assert sanitize_value(test_input) == expected
 
 
 @pytest.mark.parametrize(
-    "test_input,convert,expected",
+    "test_input, convert, expected",
     [
         ("abc", str, "abc"),
         ("žluťoučký kůň", str, "žluťoučký kůň"),
@@ -45,4 +45,4 @@ def test_sanitize_value_strip(test_input, expected):
     ],
 )
 def test_sanitize_value_convert(test_input, convert, expected):
-    sanitize_value(test_input, convert) == expected
+    assert sanitize_value(test_input, convert) == expected
