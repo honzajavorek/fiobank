@@ -15,8 +15,8 @@ from fiobank import FioBank
 
 
 @pytest.fixture()
-def token() -> uuid.UUID:
-    return uuid.uuid4()
+def token() -> str:
+    return str(uuid.uuid4())
 
 
 @pytest.fixture()
@@ -32,7 +32,7 @@ def transactions_json() -> dict:
 
 
 @pytest.fixture()
-def client_float(token: uuid.UUID, transactions_text: str):
+def client_float(token: str, transactions_text: str):
     with responses.RequestsMock(assert_all_requests_are_fired=False) as resps:
         url = re.compile(
             re.escape(FioBank.base_url)
@@ -50,7 +50,7 @@ def client_float(token: uuid.UUID, transactions_text: str):
 
 
 @pytest.fixture()
-def client_decimal(token: uuid.UUID, transactions_text: str):
+def client_decimal(token: str, transactions_text: str):
     with responses.RequestsMock(assert_all_requests_are_fired=False) as resps:
         url = re.compile(
             re.escape(FioBank.base_url)
@@ -447,7 +447,7 @@ def test_transactions_parse_no_account_number_full(transactions_json):
     assert sdk_transaction["account_number_full"] is None
 
 
-def test_409_conflict(token: uuid.UUID, transactions_text: str):
+def test_409_conflict(token: str, transactions_text: str):
     with responses.RequestsMock(registry=OrderedRegistry) as resps:
         url = re.compile(
             re.escape(FioBank.base_url)

@@ -2,6 +2,7 @@ import re
 import warnings
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Any, Callable, Generator
 
 import requests
 from tenacity import (
@@ -15,7 +16,7 @@ from tenacity import (
 __all__ = ("FioBank", "ThrottlingError")
 
 
-def coerce_amount(value):
+def coerce_amount(value: int | float) -> Decimal:
     if isinstance(value, int):
         return Decimal(value)
     if isinstance(value, float):
@@ -23,7 +24,7 @@ def coerce_amount(value):
     raise ValueError(value)
 
 
-def coerce_date(value):
+def coerce_date(value: datetime | date | str):
     if isinstance(value, datetime):
         return value.date()
     elif isinstance(value, date):
@@ -32,7 +33,7 @@ def coerce_date(value):
         return datetime.strptime(value[:10], "%Y-%m-%d").date()
 
 
-def sanitize_value(value, convert=None):
+def sanitize_value(value: Any, convert: Callable | None = None) -> Any:
     if isinstance(value, str):
         value = value.strip() or None
     if convert and value is not None:
@@ -43,7 +44,7 @@ def sanitize_value(value, convert=None):
 class ThrottlingError(Exception):
     """Throttling error raised when the API is being used too fast."""
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "Token can be used only once per 30s."
 
 
@@ -60,7 +61,7 @@ class FioBank(object):
 
     _amount_re = re.compile(r"\-?\d+(\.\d+)? [A-Z]{3}")
 
-    def __init__(self, token, decimal=False):
+    def __init__(self, token: str, decimal=False):
         self.token = token
 
         if decimal:
@@ -114,7 +115,7 @@ class FioBank(object):
         stop=stop_after_attempt(3),
         wait=wait_random_exponential(max=2 * 60),
     )
-    def _request(self, action, **params):
+    def _request(self, action: str, **params) -> dict | None:
         url_template = self.base_url + self.actions[action]
         url = url_template.format(token=self.token, **params)
 
@@ -127,7 +128,7 @@ class FioBank(object):
             return response.json(parse_float=self.float_type)
         return None
 
-    def _parse_info(self, data):
+    def _parse_info(self, data: dict) -> dict:
         # parse data from API
         info = {}
         for key, value in data["accountStatement"]["info"].items():
@@ -143,7 +144,7 @@ class FioBank(object):
         # return data
         return info
 
-    def _parse_transactions(self, data):
+    def _parse_transactions(self, data: dict) -> Generator[dict, None, None]:
         schema = self.transaction_schema
         try:
             entries = data["accountStatement"]["transactionList"]["transaction"]  # NOQA
@@ -180,7 +181,7 @@ class FioBank(object):
             # generate transaction data
             yield trans
 
-    def _add_account_number_full(self, obj):
+    def _add_account_number_full(self, obj: dict) -> None:
         account_number = obj.get("account_number")
         bank_code = obj.get("bank_code")
 
@@ -191,22 +192,29 @@ class FioBank(object):
 
         obj["account_number_full"] = account_number_full
 
-    def info(self):
+    def info(self) -> dict:
         today = date.today()
-        data = self._request("periods", from_date=today, to_date=today)
-        return self._parse_info(data)
+        if data := self._request("periods", from_date=today, to_date=today):
+            return self._parse_info(data)
+        raise ValueError("No data available")
 
-    def period(self, from_date, to_date):
-        data = self._request(
+    def period(
+        self, from_date: date | datetime | str, to_date: date | datetime | str
+    ) -> Generator[dict, None, None]:
+        if data := self._request(
             "periods", from_date=coerce_date(from_date), to_date=coerce_date(to_date)
-        )
-        return self._parse_transactions(data)
+        ):
+            return self._parse_transactions(data)
+        raise ValueError("No data available")
 
-    def statement(self, year, number):
-        data = self._request("by-id", year=year, number=number)
-        return self._parse_transactions(data)
+    def statement(self, year: int, number: int) -> Generator[dict, None, None]:
+        if data := self._request("by-id", year=year, number=number):
+            return self._parse_transactions(data)
+        raise ValueError("No data available")
 
-    def last(self, from_id=None, from_date=None):
+    def last(
+        self, from_id: int | None = None, from_date: date | datetime | str | None = None
+    ) -> Generator[dict, None, None]:
         if from_id and from_date:
             raise ValueError("Only one constraint is allowed.")
 
@@ -215,4 +223,6 @@ class FioBank(object):
         elif from_date:
             self._request("set-last-date", from_date=coerce_date(from_date))
 
-        return self._parse_transactions(self._request("last"))
+        if data := self._request("last"):
+            return self._parse_transactions(data)
+        raise ValueError("No data available")

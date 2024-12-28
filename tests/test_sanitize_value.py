@@ -1,3 +1,5 @@
+from typing import Any, Callable
+
 import pytest
 
 from fiobank import sanitize_value
@@ -14,7 +16,7 @@ from fiobank import sanitize_value
         (30.8, 30.8),
     ],
 )
-def test_sanitize_value_no_effect(test_input, expected):
+def test_sanitize_value_no_effect(test_input: Any, expected: Any):
     assert sanitize_value(test_input) == expected
 
 
@@ -26,7 +28,7 @@ def test_sanitize_value_no_effect(test_input, expected):
         ("\nfio    ", "fio"),
     ],
 )
-def test_sanitize_value_strip(test_input, expected):
+def test_sanitize_value_strip(test_input: str, expected: str | None):
     assert sanitize_value(test_input) == expected
 
 
@@ -44,5 +46,5 @@ def test_sanitize_value_strip(test_input, expected):
         (False, bool, False),
     ],
 )
-def test_sanitize_value_convert(test_input, convert, expected):
+def test_sanitize_value_convert(test_input: Any, convert: Callable, expected: Any):
     assert sanitize_value(test_input, convert) == expected
