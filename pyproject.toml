@@ -1,11 +1,16 @@
-[tool.poetry]
+[project]
 name = "fiobank"
 version = "4.0.0"
 description = "Fio Bank API in Python (unofficial)"
-authors = ["Honza Javorek <mail@honzajavorek.cz>"]
-license = "ICS"
 readme = "README.rst"
-repository = "https://github.com/honzajavorek/fiobank"
+authors = [
+    {name = "Honza Javorek", email = "mail@honzajavorek.cz"},
+]
+license = {text = "ICS"}
+requires-python = "<4.0,>=3.9"
+dependencies = [
+    "requests<3.0.0,>=2.28.2",
+]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
@@ -16,19 +21,17 @@ classifiers = [
     "Topic :: Internet",
 ]
 
-[tool.poetry.dependencies]
-python = "^3.9"
-requests = "^2.28.2"
+[project.urls]
+repository = "https://github.com/honzajavorek/fiobank"
 
-[tool.poetry.group.dev.dependencies]
-pytest = "^7.2.1"
-responses = "^0.22.0"
-mock = "^5.0.1"
+[dependency-groups]
+dev = [
+    "pytest<8.0.0,>=7.2.1",
+    "responses<1.0.0,>=0.22.0",
+    "mock<6.0.0,>=5.0.1",
+]
 
 [tool.pytest.ini_options]
 testpaths = "tests"
 norecursedirs = "env venv .git"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+pythonpath = ["."]
