@@ -115,7 +115,7 @@ class FioBank(object):
         stop=stop_after_attempt(3),
         wait=wait_random_exponential(max=2 * 60),
     )
-    def _request(self, action: str, **params) -> dict | None:
+    def _request(self, action: str, **params) -> "dict | None":
         url_template = self.base_url + self.actions[action]
         url = url_template.format(token=self.token, **params)
 
