@@ -25,18 +25,19 @@ repository = "https://github.com/honzajavorek/fiobank"
 
 [dependency-groups]
 dev = [
-    "pytest<8.0.0,>=7.2.1",
-    "responses<1.0.0,>=0.22.0",
-    "mock<6.0.0,>=5.0.1",
-    "ruff<1.0.0,>=0.8.4",
-    "pytest-ruff<1.0.0,>=0.4.1",
+    "mock>=5.0.1",
+    "pytest-cov>=6.0.0",
+    "pytest-ruff>=0.4.1",
+    "pytest>=7.2.1",
+    "responses>=0.22.0",
+    "ruff>=0.8.4",
 ]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = "tests"
 norecursedirs = "env venv .git"
-addopts = "--ff --ruff --ruff-format"
+addopts = "--ff --ruff --ruff-format --cov=fiobank --cov-report=term-missing:skip-covered --cov-context=test"
 filterwarnings = ["ignore:Using float for money can cause inaccuracies:DeprecationWarning"]
 
 [tool.ruff.lint]
