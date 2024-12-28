@@ -13,12 +13,12 @@ import responses
 from fiobank import FioBank
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture()
 def token():
     return uuid.uuid4()
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture()
 def transactions_text():
     with open((os.path.dirname(__file__) + "/transactions.json")) as f:
         return f.read()
