@@ -1,8 +1,7 @@
-from decimal import Decimal
 import re
-from decimal import Decimal
-from datetime import datetime, date
 import warnings
+from datetime import date, datetime
+from decimal import Decimal
 
 import requests
 

@@ -1,6 +1,7 @@
 from datetime import date, datetime
 
 import pytest
+
 from fiobank import coerce_date
 
 

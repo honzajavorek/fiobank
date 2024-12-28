@@ -1,11 +1,10 @@
-from decimal import Decimal
-from unittest import mock
-import re
-import os
-import uuid
 import json
+import os
+import re
+import uuid
 from datetime import date
 from decimal import Decimal
+from unittest import mock
 
 import pytest
 import requests
