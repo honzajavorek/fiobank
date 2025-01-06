@@ -220,7 +220,7 @@ class FioBank:
             return (self._parse_info(data), self._parse_transactions(data))
         raise ValueError("No data available")
 
-    def statement(self, year, number):
+    def statement(self, year: int, number: int) -> Generator[dict]:
         if data := self._request("by-id", year=year, number=number):
             return self._parse_transactions(data)
         raise ValueError("No data available")
