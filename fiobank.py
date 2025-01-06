@@ -146,7 +146,7 @@ class FioBank:
     def _parse_transactions(self, data: dict) -> Generator[dict, None, None]:
         schema = self.transaction_schema
         try:
-            entries = data["accountStatement"]["transactionList"]["transaction"]  # NOQA
+            entries = data["accountStatement"]["transactionList"]["transaction"]
         except TypeError:
             entries = []
 
