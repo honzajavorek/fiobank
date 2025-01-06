@@ -342,7 +342,7 @@ def test_transactions_parse_unsanitized(transactions_json):
     ][0]  # NOQA
     api_transaction["column10"] = {"value": "             Honza\n"}
 
-    sdk_transaction = list(client._parse_transactions(transactions_json))[0]
+    sdk_transaction = next(client._parse_transactions(transactions_json))
 
     assert sdk_transaction["account_name"] == "Honza"
 
@@ -355,7 +355,7 @@ def test_transactions_parse_convert(transactions_json):
     ][0]  # NOQA
     api_transaction["column0"] = {"value": "2015-08-30"}
 
-    sdk_transaction = list(client._parse_transactions(transactions_json))[0]
+    sdk_transaction = next(client._parse_transactions(transactions_json))
 
     assert sdk_transaction["date"] == date(2015, 8, 30)
 
@@ -366,7 +366,7 @@ def test_transactions_parse_none(transactions_json):
     api_transaction = transactions_json["accountStatement"]["transactionList"][
         "transaction"
     ][0]  # NOQA
-    sdk_transaction = list(client._parse_transactions(transactions_json))[0]
+    sdk_transaction = next(client._parse_transactions(transactions_json))
 
     assert api_transaction["column10"] is None
     assert sdk_transaction["account_name"] is None
@@ -380,7 +380,7 @@ def test_transactions_parse_missing(transactions_json):
     ][0]  # NOQA
     del api_transaction["column10"]
 
-    sdk_transaction = list(client._parse_transactions(transactions_json))[0]
+    sdk_transaction = next(client._parse_transactions(transactions_json))
 
     assert "column10" not in api_transaction
     assert sdk_transaction["account_name"] is None
@@ -416,7 +416,7 @@ def test_transactions_parse_amount_as_float(
     ][0]  # NOQA
     api_transaction["column18"] = {"value": test_input}
 
-    sdk_transaction = list(client._parse_transactions(transactions_json))[0]
+    sdk_transaction = next(client._parse_transactions(transactions_json))
 
     assert sdk_transaction["specification"] == test_input
     assert sdk_transaction["original_amount"] == amount
@@ -441,7 +441,7 @@ def test_transactions_parse_amount_as_decimal(
     ][0]  # NOQA
     api_transaction["column18"] = {"value": test_input}
 
-    sdk_transaction = list(client._parse_transactions(transactions_json))[0]
+    sdk_transaction = next(client._parse_transactions(transactions_json))
 
     assert sdk_transaction["specification"] == test_input
     assert sdk_transaction["original_amount"] == amount
@@ -457,7 +457,7 @@ def test_transactions_parse_account_number_full(transactions_json):
     api_transaction["column2"] = {"value": 10000000002}
     api_transaction["column3"] = {"value": "2010"}
 
-    sdk_transaction = list(client._parse_transactions(transactions_json))[0]
+    sdk_transaction = next(client._parse_transactions(transactions_json))
 
     assert sdk_transaction["account_number_full"] == "10000000002/2010"
 
@@ -471,7 +471,7 @@ def test_transactions_parse_no_account_number_full(transactions_json):
     api_transaction["column2"] = {"value": 10000000002}
     api_transaction["column3"] = {"value": None}
 
-    sdk_transaction = list(client._parse_transactions(transactions_json))[0]
+    sdk_transaction = next(client._parse_transactions(transactions_json))
 
     assert sdk_transaction["account_number_full"] is None
 
