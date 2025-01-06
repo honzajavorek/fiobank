@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 import re
 import warnings
+from collections.abc import Generator
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Any, Callable, Generator
+from typing import Any, Callable
 
 import requests
 from tenacity import (
@@ -198,25 +201,34 @@ class FioBank(object):
             return self._parse_info(data)
         raise ValueError("No data available")
 
-    def period(
-        self, from_date: "date | datetime | str", to_date: "date | datetime | str"
-    ) -> Generator[dict, None, None]:
-        if data := self._request(
+    def _fetch_period(
+        self, from_date: str | date | datetime, to_date: str | date | datetime
+    ) -> dict:
+        return self._request(
             "periods", from_date=coerce_date(from_date), to_date=coerce_date(to_date)
-        ):
-            return self._parse_transactions(data)
+        )
+
+    def period(
+        self, from_date: str | date | datetime, to_date: str | date | datetime
+    ) -> Generator[dict]:
+        data = self._fetch_period(from_date, to_date)
+        return self._parse_transactions(data)
+
+    def transactions(
+        self, from_date: str | date | datetime, to_date: str | date | datetime
+    ) -> tuple[dict, Generator[dict]]:
+        if data := self._fetch_period(from_date, to_date):
+            return (self._parse_info(data), self._parse_transactions(data))
         raise ValueError("No data available")
 
-    def statement(self, year: int, number: int) -> Generator[dict, None, None]:
+    def statement(self, year, number):
         if data := self._request("by-id", year=year, number=number):
             return self._parse_transactions(data)
         raise ValueError("No data available")
 
-    def last(
-        self,
-        from_id: "int | None" = None,
-        from_date: "date | datetime | str | None" = None,
-    ) -> Generator[dict, None, None]:
+    def _fetch_last(
+        self, from_id: str | None = None, from_date: str | date | datetime | None = None
+    ) -> dict:
         if from_id and from_date:
             raise ValueError("Only one constraint is allowed.")
 
@@ -226,5 +238,16 @@ class FioBank(object):
             self._request("set-last-date", from_date=coerce_date(from_date))
 
         if data := self._request("last"):
-            return self._parse_transactions(data)
+            return data
         raise ValueError("No data available")
+
+    def last(
+        self, from_id: str | None = None, from_date: str | date | datetime | None = None
+    ) -> Generator[dict]:
+        return self._parse_transactions(self._fetch_last(from_id, from_date))
+
+    def last_transactions(
+        self, from_id: str | None = None, from_date: str | date | datetime | None = None
+    ) -> tuple[dict, Generator[dict]]:
+        data = self._fetch_last(from_id, from_date)
+        return (self._parse_info(data), self._parse_transactions(data))
