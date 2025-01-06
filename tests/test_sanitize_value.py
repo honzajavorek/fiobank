@@ -2,7 +2,7 @@ from typing import Any, Callable
 
 import pytest
 
-from fiobank import sanitize_value
+from fiobank.utils import sanitize_value
 
 
 @pytest.mark.parametrize(

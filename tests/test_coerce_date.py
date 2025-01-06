@@ -2,7 +2,7 @@ from datetime import date, datetime
 
 import pytest
 
-from fiobank import coerce_date
+from fiobank.utils import coerce_date
 
 
 @pytest.mark.parametrize(
