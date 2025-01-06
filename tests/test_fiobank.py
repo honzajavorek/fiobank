@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import os
 import re
@@ -21,13 +23,13 @@ def token() -> str:
 
 @pytest.fixture()
 def transactions_text() -> str:
-    with open((os.path.dirname(__file__) + "/transactions.json")) as f:
+    with open(os.path.dirname(__file__) + "/transactions.json") as f:
         return f.read()
 
 
 @pytest.fixture()
 def transactions_json() -> dict:
-    with open((os.path.dirname(__file__) + "/transactions.json")) as f:
+    with open(os.path.dirname(__file__) + "/transactions.json") as f:
         return json.load(f)
 
 
@@ -35,15 +37,11 @@ def transactions_json() -> dict:
 def client_float(token: str, transactions_text: str):
     with responses.RequestsMock(assert_all_requests_are_fired=False) as resps:
         url = re.compile(
-            re.escape(FioBank.base_url)
-            + r"[^/]+/{token}/([^/]+/)*transactions\.json".format(token=token)
+            re.escape(FioBank.base_url) + rf"[^/]+/{token}/([^/]+/)*transactions\.json"
         )
         resps.add(responses.GET, url, body=transactions_text)
 
-        url = re.compile(
-            re.escape(FioBank.base_url)
-            + r"set-last-\w+/{token}/[^/]+/".format(token=token)
-        )
+        url = re.compile(re.escape(FioBank.base_url) + rf"set-last-\w+/{token}/[^/]+/")
         resps.add(responses.GET, url)
 
         yield FioBank(token)
@@ -53,15 +51,11 @@ def client_float(token: str, transactions_text: str):
 def client_decimal(token: str, transactions_text: str):
     with responses.RequestsMock(assert_all_requests_are_fired=False) as resps:
         url = re.compile(
-            re.escape(FioBank.base_url)
-            + r"[^/]+/{token}/([^/]+/)*transactions\.json".format(token=token)
+            re.escape(FioBank.base_url) + rf"[^/]+/{token}/([^/]+/)*transactions\.json"
         )
         resps.add(responses.GET, url, body=transactions_text)
 
-        url = re.compile(
-            re.escape(FioBank.base_url)
-            + r"set-last-\w+/{token}/[^/]+/".format(token=token)
-        )
+        url = re.compile(re.escape(FioBank.base_url) + rf"set-last-\w+/{token}/[^/]+/")
         resps.add(responses.GET, url)
 
         yield FioBank(token, decimal=True)
@@ -296,7 +290,7 @@ def test_transaction_schema_is_complete():
 
     element_re = re.compile(r'<\w+:element[^>]+name="column_(\d+)')
     for match in element_re.finditer(response.text):
-        column_name = "column{}".format(match.group(1))
+        column_name = f"column{match.group(1)}"
         columns_in_xsd.add(column_name)
 
     assert frozenset(FioBank("...").transaction_schema.keys()) == columns_in_xsd
@@ -479,8 +473,7 @@ def test_transactions_parse_no_account_number_full(transactions_json):
 def test_409_conflict(token: str, transactions_text: str):
     with responses.RequestsMock(registry=OrderedRegistry) as resps:
         url = re.compile(
-            re.escape(FioBank.base_url)
-            + r"[^/]+/{token}/([^/]+/)*transactions\.json".format(token=token)
+            re.escape(FioBank.base_url) + rf"[^/]+/{token}/([^/]+/)*transactions\.json"
         )
         resps.add(responses.GET, url, status=409)
         resps.add(responses.GET, url, body=transactions_text)

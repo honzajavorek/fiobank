@@ -41,7 +41,7 @@ addopts = "--ff --ruff --ruff-format --cov=fiobank --cov-report=term-missing:ski
 filterwarnings = ["ignore:Using float for money can cause inaccuracies:DeprecationWarning"]
 
 [tool.ruff.lint]
-extend-select = ["I"]
+extend-select = ["I", "UP"]
 
 [tool.ruff.lint.isort]
 combine-as-imports = true
