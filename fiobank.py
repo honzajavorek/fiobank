@@ -61,7 +61,7 @@ class FioBank(object):
 
     _amount_re = re.compile(r"\-?\d+(\.\d+)? [A-Z]{3}")
 
-    def __init__(self, token: str, decimal=False):
+    def __init__(self, token: str, *, decimal: bool = False):
         self.token = token
 
         if decimal:
