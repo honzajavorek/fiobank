@@ -27,10 +27,9 @@ def coerce_amount(value: "int | float") -> Decimal:
 def coerce_date(value: "datetime | date | str") -> date:
     if isinstance(value, datetime):
         return value.date()
-    elif isinstance(value, date):
+    if isinstance(value, date):
         return value
-    else:
-        return datetime.strptime(value[:10], "%Y-%m-%d").date()
+    return datetime.strptime(value[:10], "%Y-%m-%d").date()
 
 
 def sanitize_value(value: Any, convert: "Callable | None" = None) -> Any:
