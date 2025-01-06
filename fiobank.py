@@ -19,7 +19,7 @@ from tenacity import (
 __all__ = ("FioBank", "ThrottlingError")
 
 
-def coerce_amount(value: "int | float") -> Decimal:
+def coerce_amount(value: int | float) -> Decimal:
     if isinstance(value, int):
         return Decimal(value)
     if isinstance(value, float):
@@ -27,7 +27,7 @@ def coerce_amount(value: "int | float") -> Decimal:
     raise ValueError(value)
 
 
-def coerce_date(value: "datetime | date | str") -> date:
+def coerce_date(value: datetime | date | str) -> date:
     if isinstance(value, datetime):
         return value.date()
     if isinstance(value, date):
@@ -35,7 +35,7 @@ def coerce_date(value: "datetime | date | str") -> date:
     return datetime.strptime(value[:10], "%Y-%m-%d").date()
 
 
-def sanitize_value(value: Any, convert: "Callable | None" = None) -> Any:
+def sanitize_value(value: Any, convert: Callable | None = None) -> Any:
     if isinstance(value, str):
         value = value.strip() or None
     if convert and value is not None:
@@ -117,7 +117,7 @@ class FioBank:
         stop=stop_after_attempt(3),
         wait=wait_random_exponential(max=2 * 60),
     )
-    def _request(self, action: str, **params) -> "dict | None":
+    def _request(self, action: str, **params) -> dict | None:
         url_template = self.base_url + self.actions[action]
         url = url_template.format(token=self.token, **params)
 
