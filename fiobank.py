@@ -185,7 +185,7 @@ class FioBank:
         bank_code = obj.get("bank_code")
 
         if account_number is not None and bank_code is not None:
-            account_number_full = "{}/{}".format(account_number, bank_code)
+            account_number_full = f"{account_number}/{bank_code}"
         else:
             account_number_full = None
 
