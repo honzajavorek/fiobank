@@ -61,6 +61,16 @@ Listing transactions within a period:
       'transaction_id': 'XXXXXXXXXX'
     }
 
+Getting transactions with account information in one request:
+
+.. code:: python
+
+   >>> client.transactions('2013-01-20', '2013-03-20')
+   (
+      {'currency': 'CZK', 'account_number_full': 'XXXXXXXXXX/2010', 'balance': 42.00, 'account_number': 'XXXXXXXXXX', 'bank_code': '2010'}, 
+      'transactions': <generator object _parse_transactions at 0x170c190>
+   )
+
 Listing transactions from a single account statement:
 
 .. code:: python
@@ -74,6 +84,16 @@ Listing the latest transactions:
     >>> client.last()  # return transactions added from last listing
     >>> client.last(from_id='...')  # sets cursor to given transaction_id and returns following transactions
     >>> client.last(from_date='2013-03-01')  # sets cursor to given date and returns following transactions
+    
+Getting the latest transactions with account information in one request:
+
+.. code:: python
+
+   >>> client.last_transactions()
+   (
+      {'currency': 'CZK', 'account_number_full': 'XXXXXXXXXX/2010', 'balance': 42.00, 'account_number': 'XXXXXXXXXX', 'bank_code': '2010'}, 
+      'transactions': <generator object _parse_transactions at 0x170c190>
+   )
 
 Conflict Error
 --------------

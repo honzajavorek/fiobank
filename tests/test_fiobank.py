@@ -201,6 +201,35 @@ def test_transactions_integration(client_float, method, args, kwargs):
     assert count > 0
 
 
+@pytest.mark.parametrize(
+    "args,kwargs",
+    [
+        ([date(2016, 8, 4), date(2016, 8, 30)], {}),
+        (["2016-08-04", "2016-08-30"], {}),
+    ],
+)
+def test_transactions(client_decimal, args, kwargs):
+    info, transactions = client_decimal.transactions(*args, **kwargs)
+    transaction = next(transactions)
+    assert transaction["amount"] == Decimal("-130.0")
+    assert info["balance"] == Decimal("2060.52")
+
+
+@pytest.mark.parametrize(
+    "args,kwargs",
+    [
+        ([], {"from_id": 308}),
+        ([], {"from_date": date(2016, 8, 4)}),
+        ([], {"from_date": "2016-08-04"}),
+    ],
+)
+def test_last_transactions(client_decimal, args, kwargs):
+    info, transactions = client_decimal.last_transactions(*args, **kwargs)
+    transaction = next(transactions)
+    assert transaction["amount"] == Decimal("-130.0")
+    assert info["balance"] == Decimal("2060.52")
+
+
 def test_period_coerces_date(transactions_json):
     client = FioBank("...")
 
