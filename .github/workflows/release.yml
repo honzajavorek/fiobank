@@ -7,6 +7,11 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/fiobank
+    permissions:
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
