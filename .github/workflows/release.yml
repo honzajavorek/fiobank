@@ -29,5 +29,5 @@ jobs:
           rm -r .smoketest
 
       - name: Publish package
-        if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags') && github.repository == 'honzajavorek/fiobank'
+        if: github.event_name == 'push' && github.repository == 'honzajavorek/fiobank'
         run: uv publish --trusted-publishing always
