@@ -46,3 +46,7 @@ extend-select = ["I"]
 [tool.ruff.lint.isort]
 combine-as-imports = true
 lines-after-imports = 2
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
