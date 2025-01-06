@@ -203,9 +203,11 @@ class FioBank:
     def _fetch_period(
         self, from_date: str | date | datetime, to_date: str | date | datetime
     ) -> dict:
-        return self._request(
+        if data := self._request(
             "periods", from_date=coerce_date(from_date), to_date=coerce_date(to_date)
-        )
+        ):
+            return data
+        raise ValueError("No data available")
 
     def period(
         self, from_date: str | date | datetime, to_date: str | date | datetime
