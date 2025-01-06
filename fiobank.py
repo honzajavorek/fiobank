@@ -47,7 +47,7 @@ class ThrottlingError(Exception):
         return "Token can be used only once per 30s"
 
 
-class FioBank(object):
+class FioBank:
     base_url = "https://fioapi.fio.cz/v1/rest/"
 
     actions = {
