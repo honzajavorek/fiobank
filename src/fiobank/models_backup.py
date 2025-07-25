@@ -20,35 +20,7 @@ except ImportError:
         @classmethod
         def model_validate(cls, data, context=None):
             instance = cls()
-            
-            # Define which fields use which validators (simulating the @field_validator decorator)
-            validator_mappings = {
-                'date': 'parse_date',
-                'amount': 'parse_amount',
-                # All string fields use parse_string_field
-                'account_number': 'parse_string_field',
-                'bank_code': 'parse_string_field', 
-                'constant_symbol': 'parse_string_field',
-                'variable_symbol': 'parse_string_field',
-                'specific_symbol': 'parse_string_field',
-                'user_identification': 'parse_string_field',
-                'type': 'parse_string_field',
-                'executor': 'parse_string_field',
-                'account_name': 'parse_string_field',
-                'bank_name': 'parse_string_field',
-                'currency': 'parse_string_field',
-                'recipient_message': 'parse_string_field',
-                'instruction_id': 'parse_string_field',
-                'specification': 'parse_string_field',
-                'transaction_id': 'parse_string_field',
-                'comment': 'parse_string_field',
-                'bic': 'parse_string_field',
-                'reference': 'parse_string_field',
-                # Info model fields
-                'balance': 'parse_balance',
-            }
-            
-            # Get all field aliases and their mappings  
+            # Get all field aliases and their mappings
             field_mappings = {}
             for attr in dir(cls):
                 if attr.startswith('_') or callable(getattr(cls, attr)):
@@ -56,14 +28,16 @@ except ImportError:
                 field_obj = getattr(cls, attr)
                 if hasattr(field_obj, 'alias') and field_obj.alias:
                     field_mappings[field_obj.alias] = attr
-                
-            # Process each field from data
+                else:
+                    field_mappings[attr] = attr
+            
+            # Process each field
             for key, value in data.items():
                 field_name = field_mappings.get(key)
                 if field_name:
                     # Apply validator if available
-                    validator_method_name = validator_mappings.get(field_name)
-                    if validator_method_name and hasattr(cls, validator_method_name):
+                    validator_method_name = f'parse_{field_name}'
+                    if hasattr(cls, validator_method_name):
                         validator = getattr(cls, validator_method_name)
                         try:
                             # Mock info object
@@ -76,10 +50,11 @@ except ImportError:
                             value = validator(value)
                     setattr(instance, field_name, value)
             
-            # Set None for missing mapped fields
-            for alias, field_name in field_mappings.items():
-                if not hasattr(instance, field_name):
-                    setattr(instance, field_name, None)
+            # Set None for missing fields
+            for attr in dir(cls):
+                if not attr.startswith('_') and not callable(getattr(cls, attr)):
+                    if not hasattr(instance, attr):
+                        setattr(instance, attr, None)
             
             return instance
         
@@ -89,9 +64,6 @@ except ImportError:
                 if attr.startswith('_') or attr.startswith('model_') or callable(getattr(self, attr)):
                     continue
                 value = getattr(self, attr)
-                # Skip MockField objects and convert them to None
-                if hasattr(value, '__class__') and 'MockField' in str(value.__class__):
-                    value = None
                 if exclude_none and value is None:
                     continue
                 result[attr] = value
