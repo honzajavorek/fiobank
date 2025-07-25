@@ -1,16 +1,15 @@
-from __future__ import annotations
-
 import re
 from datetime import date
 from decimal import Decimal
-from typing import Any, Union
+from typing import Any, Optional, Union
 
 try:
     from pydantic import BaseModel, Field, field_validator
     PYDANTIC_AVAILABLE = True
 except ImportError:
     PYDANTIC_AVAILABLE = False
-    # Create minimal mock classes for testing
+    
+    # Create minimal mock classes for fallback when pydantic is not available
     class BaseModel:
         model_config = {}
         def __init__(self, **kwargs):
@@ -115,33 +114,33 @@ from .utils import coerce_date, sanitize_value
 class Transaction(BaseModel):
     """Pydantic model for bank transaction data."""
     
-    date = Field(None, alias="column0")
-    amount = Field(None, alias="column1")
-    account_number = Field(None, alias="column2")
-    bank_code = Field(None, alias="column3")
-    constant_symbol = Field(None, alias="column4")
-    variable_symbol = Field(None, alias="column5")
-    specific_symbol = Field(None, alias="column6")
-    user_identification = Field(None, alias="column7")
-    type = Field(None, alias="column8")
-    executor = Field(None, alias="column9")
-    account_name = Field(None, alias="column10")
-    bank_name = Field(None, alias="column12")
-    currency = Field(None, alias="column14")
-    recipient_message = Field(None, alias="column16")
-    instruction_id = Field(None, alias="column17")
-    specification = Field(None, alias="column18")
-    transaction_id = Field(None, alias="column22")
-    comment = Field(None, alias="column25")
-    bic = Field(None, alias="column26")
-    reference = Field(None, alias="column27")
+    date: Optional[date] = Field(None, alias="column0")
+    amount: Union[float, Decimal, None] = Field(None, alias="column1")
+    account_number: Optional[str] = Field(None, alias="column2")
+    bank_code: Optional[str] = Field(None, alias="column3")
+    constant_symbol: Optional[str] = Field(None, alias="column4")
+    variable_symbol: Optional[str] = Field(None, alias="column5")
+    specific_symbol: Optional[str] = Field(None, alias="column6")
+    user_identification: Optional[str] = Field(None, alias="column7")
+    type: Optional[str] = Field(None, alias="column8")
+    executor: Optional[str] = Field(None, alias="column9")
+    account_name: Optional[str] = Field(None, alias="column10")
+    bank_name: Optional[str] = Field(None, alias="column12")
+    currency: Optional[str] = Field(None, alias="column14")
+    recipient_message: Optional[str] = Field(None, alias="column16")
+    instruction_id: Optional[str] = Field(None, alias="column17")
+    specification: Optional[str] = Field(None, alias="column18")
+    transaction_id: Optional[str] = Field(None, alias="column22")
+    comment: Optional[str] = Field(None, alias="column25")
+    bic: Optional[str] = Field(None, alias="column26")
+    reference: Optional[str] = Field(None, alias="column27")
     
     # Additional computed fields
-    account_number_full = None
-    original_amount = None
-    original_currency = None
+    account_number_full: Optional[str] = Field(default=None)
+    original_amount: Union[float, Decimal, None] = Field(default=None)
+    original_currency: Optional[str] = Field(default=None)
     
-    model_config = {"populate_by_name": True}
+    model_config = {"populate_by_name": True, "arbitrary_types_allowed": True}
 
     @staticmethod
     def _extract_value(v: Any) -> Any:
@@ -154,7 +153,7 @@ class Transaction(BaseModel):
     
     @field_validator('date', mode='before')
     @classmethod
-    def parse_date(cls, v: Any) -> date | None:
+    def parse_date(cls, v: Any) -> Optional[date]:
         v = cls._extract_value(v)
         v = sanitize_value(v)
         if v is not None:
@@ -163,7 +162,7 @@ class Transaction(BaseModel):
     
     @field_validator('amount', mode='before')
     @classmethod
-    def parse_amount(cls, v: Any, info=None) -> float | Decimal | None:
+    def parse_amount(cls, v: Any, info=None) -> Union[float, Decimal, None]:
         v = cls._extract_value(v)
         v = sanitize_value(v)
         if v is not None:
@@ -180,7 +179,7 @@ class Transaction(BaseModel):
         'bic', 'reference', mode='before'
     )
     @classmethod
-    def parse_string_field(cls, v: Any) -> str | None:
+    def parse_string_field(cls, v: Any) -> Optional[str]:
         v = cls._extract_value(v)
         return sanitize_value(v, str)
 
@@ -188,21 +187,21 @@ class Transaction(BaseModel):
 class Info(BaseModel):
     """Pydantic model for account information."""
     
-    account_number = Field(None, alias="accountId")
-    bank_code = Field(None, alias="bankId") 
-    currency = Field(None, alias="currency")
-    iban = Field(None, alias="iban")
-    bic = Field(None, alias="bic")
-    balance = Field(None, alias="closingBalance")
+    account_number: Optional[str] = Field(None, alias="accountId")
+    bank_code: Optional[str] = Field(None, alias="bankId") 
+    currency: Optional[str] = Field(None, alias="currency")
+    iban: Optional[str] = Field(None, alias="iban")
+    bic: Optional[str] = Field(None, alias="bic")
+    balance: Union[float, Decimal, None] = Field(None, alias="closingBalance")
     
     # Additional computed field
-    account_number_full = None
+    account_number_full: Optional[str] = Field(default=None)
     
-    model_config = {"populate_by_name": True}
+    model_config = {"populate_by_name": True, "arbitrary_types_allowed": True}
     
     @field_validator('balance', mode='before')
     @classmethod
-    def parse_balance(cls, v: Any, info=None) -> float | Decimal | None:
+    def parse_balance(cls, v: Any, info=None) -> Union[float, Decimal, None]:
         v = sanitize_value(v)
         if v is not None:
             # Get the float_type from the context or use float as default
@@ -214,5 +213,5 @@ class Info(BaseModel):
         'account_number', 'bank_code', 'currency', 'iban', 'bic', mode='before'
     )
     @classmethod
-    def parse_string_field(cls, v: Any) -> str | None:
+    def parse_string_field(cls, v: Any) -> Optional[str]:
         return sanitize_value(v, str)
