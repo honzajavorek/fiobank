@@ -214,6 +214,34 @@ class Info(BaseModel):
     
     model_config = {"populate_by_name": True, "arbitrary_types_allowed": True}
     
+    @classmethod
+    def model_validate(cls, data, context=None):
+        """Override model_validate to handle case-insensitive field matching."""
+        if isinstance(data, dict):
+            # Create a case-insensitive mapping
+            normalized_data = {}
+            field_mappings = {
+                "accountid": "accountId",
+                "bankid": "bankId",
+                "currency": "currency", 
+                "iban": "iban",
+                "bic": "bic",
+                "closingbalance": "closingBalance"
+            }
+            
+            for key, value in data.items():
+                key_lower = key.lower()
+                normalized_key = field_mappings.get(key_lower, key)
+                normalized_data[normalized_key] = value
+                
+            data = normalized_data
+            
+        if PYDANTIC_AVAILABLE:
+            return super().model_validate(data, context=context)
+        else:
+            # Use fallback implementation
+            return super().model_validate(data, context)
+    
     @field_validator('balance', mode='before')
     @classmethod
     def parse_balance(cls, v: Any, info) -> Union[float, Decimal, None]:
