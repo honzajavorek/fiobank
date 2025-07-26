@@ -3,7 +3,12 @@ from __future__ import annotations
 import re
 from datetime import date
 from decimal import Decimal
-from typing import Any, Optional, Union
+from typing import Any, Optional, Union, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from datetime import date as DateType
+else:
+    DateType = date
 
 try:
     from pydantic import BaseModel, Field, field_validator
@@ -117,7 +122,7 @@ from .utils import coerce_date, sanitize_value
 class Transaction(BaseModel):
     """Pydantic model for bank transaction data."""
     
-    date: Optional[date] = Field(None, alias="column0")
+    date: Optional[DateType] = Field(None, alias="column0")
     amount: Union[float, Decimal, None] = Field(None, alias="column1")
     account_number: Optional[str] = Field(None, alias="column2")
     bank_code: Optional[str] = Field(None, alias="column3")
