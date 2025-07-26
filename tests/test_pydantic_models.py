@@ -5,9 +5,10 @@ import os
 from datetime import date
 from decimal import Decimal
 
+import pytest
+
 from fiobank import FioBank
 from fiobank.models import Info, Transaction
-from fiobank.utils import coerce_date
 
 
 def test_pydantic_models_with_float():
@@ -131,19 +132,15 @@ def test_fiobank_integration_decimal():
 
 
 def test_transaction_schema_backward_compatibility():
-    """Test that transaction_schema property provides backward compatibility."""
+    """Test that transaction_schema property is deprecated and raises NotImplementedError."""
     client = FioBank("test_token")
 
-    # transaction_schema should exist for backward compatibility
-    assert hasattr(client, "transaction_schema")
-    schema = client.transaction_schema
+    # transaction_schema property should exist on the class
+    assert hasattr(FioBank, "transaction_schema")
 
-    # It should be a dict mapping column names to (field_name, type_func) tuples
-    assert isinstance(schema, dict)
-    assert "column0" in schema
-    assert "column1" in schema
-    assert schema["column0"] == ("date", coerce_date)
-    assert schema["column1"] == ("amount", client.float_type)
-
-    # info_schema is not needed for backward compatibility (not used by existing tests)
-    assert not hasattr(client, "info_schema")
+    # Accessing it should raise a deprecation warning and NotImplementedError
+    with pytest.warns(DeprecationWarning, match="transaction_schema is deprecated"):
+        with pytest.raises(
+            NotImplementedError, match="transaction_schema has been replaced"
+        ):
+            _ = client.transaction_schema

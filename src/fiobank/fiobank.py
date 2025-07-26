@@ -50,29 +50,23 @@ class FioBank:
 
     @property
     def transaction_schema(self) -> dict:
-        """Backward compatibility property that recreates the original transaction schema mapping."""
-        return {
-            "column0": ("date", coerce_date),
-            "column1": ("amount", self.float_type),
-            "column2": ("account_number", str),
-            "column3": ("bank_code", str),
-            "column4": ("constant_symbol", str),
-            "column5": ("variable_symbol", str),
-            "column6": ("specific_symbol", str),
-            "column7": ("user_identification", str),
-            "column8": ("type", str),
-            "column9": ("executor", str),
-            "column10": ("account_name", str),
-            "column12": ("bank_name", str),
-            "column14": ("currency", str),
-            "column16": ("recipient_message", str),
-            "column17": ("instruction_id", str),
-            "column18": ("specification", str),
-            "column22": ("transaction_id", str),
-            "column25": ("comment", str),
-            "column26": ("bic", str),
-            "column27": ("reference", str),
-        }
+        """Legacy transaction schema property (deprecated).
+        
+        This property provides access to the old transaction schema mapping
+        but is deprecated and will be removed in a future version.
+        Use the new Pydantic models instead.
+        """
+        import warnings
+        warnings.warn(
+            "transaction_schema is deprecated and will be removed in a future version. "
+            "Use the new Pydantic models instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        raise NotImplementedError(
+            "transaction_schema has been replaced with Pydantic models. "
+            "This property is no longer supported."
+        )
 
     @retry(
         retry=retry_if_exception_type(ThrottlingError),
@@ -96,8 +90,25 @@ class FioBank:
     def _parse_info(self, data: dict) -> dict:
         # parse data from API using Pydantic model
         raw_info = data["accountStatement"]["info"]
+        
+        # Handle case-insensitive field names
+        normalized_info = {}
+        field_mappings = {
+            "accountid": "accountId",
+            "bankid": "bankId", 
+            "currency": "currency",
+            "iban": "iban",
+            "bic": "bic",
+            "closingbalance": "closingBalance"
+        }
+        
+        for key, value in raw_info.items():
+            key_lower = key.lower()
+            normalized_key = field_mappings.get(key_lower, key)
+            normalized_info[normalized_key] = value
+        
         info_model = Info.model_validate(
-            raw_info, 
+            normalized_info, 
             context={"float_type": self.float_type}
         )
         info = info_model.model_dump(by_alias=False, exclude_none=False)
