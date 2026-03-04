@@ -92,7 +92,26 @@ class FioBank:
         response = requests.get(url)
         if response.status_code == requests.codes["conflict"]:
             raise ThrottlingError()
-        response.raise_for_status()
+
+        # Handle all other HTTP errors with token sanitization and response body
+        try:
+            response.raise_for_status()
+        except requests.HTTPError as e:
+            # Get the original error message and sanitize token
+            sanitized_msg = str(e).replace(self.token, "***TOKEN***")
+
+            # Try to get response body and sanitize it too
+            try:
+                response_body = response.text
+                if response_body:
+                    # Sanitize token from response body as well
+                    sanitized_body = response_body.replace(self.token, "***TOKEN***")
+                    # Append response body to the error message
+                    sanitized_msg = f"{sanitized_msg}. Response body: {sanitized_body}"
+            except Exception:
+                pass  # If we can't get response body, just use the original error
+
+            raise requests.HTTPError(sanitized_msg, response=response)
 
         if response.content:
             return response.json(parse_float=self.float_type)
