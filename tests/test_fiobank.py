@@ -247,6 +247,14 @@ def test_statement(transactions_json):
         stub.assert_called_once_with("by-id", year=2016, number=308)
 
 
+def test_invalid_token():
+    with pytest.raises(ValueError, match="Token cannot be None or empty"):
+        FioBank(token=None)
+
+    with pytest.raises(ValueError, match="Token cannot be None or empty"):
+        FioBank(token="")
+
+
 def test_last_conflicting_params():
     client = FioBank("...")
     with pytest.raises(ValueError):

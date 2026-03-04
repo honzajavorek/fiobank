@@ -32,6 +32,8 @@ class FioBank:
     _amount_re = re.compile(r"\-?\d+(\.\d+)? [A-Z]{3}")
 
     def __init__(self, token: str, *, decimal: bool = False):
+        if not token:
+            raise ValueError("Token cannot be None or empty")
         self.token = token
 
         if decimal:
