@@ -65,10 +65,10 @@ Getting transactions with account information in one request:
 
 .. code:: python
 
-   >>> client.transactions('2013-01-20', '2013-03-20')
+    >>> info, transactions = client.transactions('2013-01-20', '2013-03-20')
    (
       {'currency': 'CZK', 'account_number_full': 'XXXXXXXXXX/2010', 'balance': 42.00, 'account_number': 'XXXXXXXXXX', 'bank_code': '2010'},
-      'transactions': <generator object _parse_transactions at 0x170c190>
+        <generator object _parse_transactions at 0x170c190>
    )
 
 Listing transactions from a single account statement:
@@ -89,10 +89,10 @@ Getting the latest transactions with account information in one request:
 
 .. code:: python
 
-   >>> client.last_transactions()
+    >>> info, transactions = client.last_transactions()
    (
       {'currency': 'CZK', 'account_number_full': 'XXXXXXXXXX/2010', 'balance': 42.00, 'account_number': 'XXXXXXXXXX', 'bank_code': '2010'},
-      'transactions': <generator object _parse_transactions at 0x170c190>
+        <generator object _parse_transactions at 0x170c190>
    )
 
 Conflict Error
@@ -100,8 +100,19 @@ Conflict Error
 
 `Fio API documentation <http://www.fio.cz/docs/cz/API_Bankovnictvi.pdf>`_
 (Section 8.3) states that a single token should be used only once per
-30s. Otherwise, an HTTP 409 Conflict will be returned and
+30s. Otherwise, an HTTP 409 Conflict will be returned.
+
+The client automatically retries throttling errors up to 3 times with
+exponential backoff. If all attempts fail,
 ``fiobank.ThrottlingError`` will be raised.
+
+Notes
+-----
+
+- Use ``decimal=True`` for money-safe ``Decimal`` values. Without it,
+    amounts are parsed as ``float``.
+- Date arguments accept ``date``, ``datetime``, or ISO-like strings
+    (e.g. ``YYYY-MM-DD`` and ``YYYY-MM-DDTHH:MM:SS``).
 
 Development
 -----------
@@ -144,7 +155,7 @@ The changelog is maintained in `GitHub Releases <https://github.com/honzajavorek
 License: ISC
 ------------
 
-© 2025 Honza Javorek <mail@honzajavorek.cz>
+© 2026 Honza Javorek <mail@honzajavorek.cz>
 
 This work is licensed under the `ISC
 license <https://en.wikipedia.org/wiki/ISC_license>`_.
