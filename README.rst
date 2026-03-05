@@ -67,7 +67,7 @@ Getting transactions with account information in one request:
 
    >>> client.transactions('2013-01-20', '2013-03-20')
    (
-      {'currency': 'CZK', 'account_number_full': 'XXXXXXXXXX/2010', 'balance': 42.00, 'account_number': 'XXXXXXXXXX', 'bank_code': '2010'}, 
+      {'currency': 'CZK', 'account_number_full': 'XXXXXXXXXX/2010', 'balance': 42.00, 'account_number': 'XXXXXXXXXX', 'bank_code': '2010'},
       'transactions': <generator object _parse_transactions at 0x170c190>
    )
 
@@ -84,14 +84,14 @@ Listing the latest transactions:
     >>> client.last()  # return transactions added from last listing
     >>> client.last(from_id='...')  # sets cursor to given transaction_id and returns following transactions
     >>> client.last(from_date='2013-03-01')  # sets cursor to given date and returns following transactions
-    
+
 Getting the latest transactions with account information in one request:
 
 .. code:: python
 
    >>> client.last_transactions()
    (
-      {'currency': 'CZK', 'account_number_full': 'XXXXXXXXXX/2010', 'balance': 42.00, 'account_number': 'XXXXXXXXXX', 'bank_code': '2010'}, 
+      {'currency': 'CZK', 'account_number_full': 'XXXXXXXXXX/2010', 'balance': 42.00, 'account_number': 'XXXXXXXXXX', 'bank_code': '2010'},
       'transactions': <generator object _parse_transactions at 0x170c190>
    )
 
@@ -115,6 +115,31 @@ Install using `uv <https://docs.astral.sh/uv/>`_::
 Then run tests::
 
     uv run pytest
+
+Releasing
+---------
+
+Release flow is automated by GitHub Actions in
+`.github/workflows/release.yml`.
+
+1. Bump the version in `pyproject.toml` using `uv`::
+
+    uv version --bump patch  # or minor / major
+
+2. Review and commit the version change::
+
+    git commit -am "release vX.Y.Z"
+
+3. Create and push a git tag for that version::
+
+    git tag vX.Y.Z
+    git push origin HEAD --tags
+
+When the tag appears on GitHub, the release workflow builds and smoke-tests
+the package, then publishes it to PyPI automatically (for the
+`honzajavorek/fiobank` repository only).
+
+The changelog is maintained in `GitHub Releases <https://github.com/honzajavorek/fiobank/releases>`_.
 
 License: ISC
 ------------
