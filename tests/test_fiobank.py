@@ -481,3 +481,24 @@ def test_409_conflict(token: str, transactions_text: str):
         transaction = next(client.last())
 
     assert transaction["amount"] == Decimal("-130.0")
+
+
+def test_http_error_with_token_redaction(token: str):
+    response_body = f"Error occurred with token {token} in the response body"
+
+    with responses.RequestsMock() as resps:
+        url = re.compile(
+            re.escape(FioBank.base_url)
+            + rf"periods/{token}/[^/]+/[^/]+/transactions\.json"
+        )
+        resps.add(responses.GET, url, status=400, body=response_body)
+        client = FioBank(token, decimal=True)
+
+        with pytest.raises(requests.HTTPError) as exc_info:
+            list(client.period("2025-01-01", "2025-02-01"))
+
+        error_msg = str(exc_info.value)
+        # Token should be redacted from both URL and response body
+        assert token not in error_msg
+        assert "***TOKEN***" in error_msg
+        assert "Error occurred with token ***TOKEN*** in the response body" in error_msg
