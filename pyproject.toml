@@ -1,6 +1,6 @@
 [project]
 name = "fiobank"
-version = "4.1.0"
+version = "4.1.1"
 description = "Fio Bank API in Python (unofficial)"
 readme = "README.rst"
 authors = [{name = "Honza Javorek", email = "mail@honzajavorek.cz"}]
