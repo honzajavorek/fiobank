@@ -4,7 +4,7 @@ version = "4.1.1"
 description = "Fio Bank API in Python (unofficial)"
 readme = "README.rst"
 authors = [{name = "Honza Javorek", email = "mail@honzajavorek.cz"}]
-license = {text = "ICS"}
+license = {text = "ISC"}
 requires-python = "<4.0,>=3.9"
 dependencies = [
     "requests<3.0.0,>=2.28.2",
