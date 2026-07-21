@@ -104,12 +104,9 @@ class FioBank:
             return response.json(parse_float=self.float_type)
         return None
 
-    def _context(self) -> dict:
-        return {"money_type": self.float_type}
-
     def _parse_info(self, data: dict) -> dict:
         info = Info.model_validate(
-            data["accountStatement"]["info"], context=self._context()
+            data["accountStatement"]["info"], context={"money_type": self.float_type}
         ).model_dump()
 
         # make some refinements
@@ -125,7 +122,7 @@ class FioBank:
 
         for entry in entries:
             trans = Transaction.model_validate(
-                entry, context=self._context()
+                entry, context={"money_type": self.float_type}
             ).model_dump()
 
             # make some refinements
