@@ -214,12 +214,11 @@ class FioBank:
         data = self._fetch_last(from_id, from_date)
         return (self._parse_info(data), self._parse_transactions(data))
 
-    def last_statement(self, year: int | None = None) -> tuple[int, int] | None:
+    def _last_statement_number(self, year: int | None = None) -> tuple[int, int] | None:
         # This endpoint isn't part of the official REST API documentation, but
         # it's used by the official Fio 'api-plus' Java application. It returns
         # the year and sequence number of the last statement, e.g. "2017,12",
-        # or "null,null" when there's no statement for the given year. The
-        # returned sequence number can be passed to 'statement()'.
+        # or "null,null" when there's no statement for the given year.
         url = self.base_url + self.actions["last-statement"].format(token=self.token)
         params = {"year": year} if year is not None else None
 
@@ -228,3 +227,9 @@ class FioBank:
         if year_value == "null" or not number_value:
             return None
         return (int(year_value), int(number_value))
+
+    def last_statement(self, year: int | None = None) -> Generator[dict]:
+        numbering = self._last_statement_number(year)
+        if numbering is None:
+            raise ValueError("No data available")
+        return self.statement(*numbering)

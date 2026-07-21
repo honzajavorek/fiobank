@@ -471,32 +471,64 @@ def test_transactions_parse_no_account_number_full(transactions_json):
     assert sdk_transaction["account_number_full"] is None
 
 
-def test_last_statement(token: str):
+def test_last_statement(token: str, transactions_text: str):
     with responses.RequestsMock() as resps:
-        url = FioBank.base_url + f"lastStatement/{token}/statement"
-        resps.add(responses.GET, url, body="2017,12")
+        resps.add(
+            responses.GET,
+            FioBank.base_url + f"lastStatement/{token}/statement",
+            body="2017,12",
+        )
+        resps.add(
+            responses.GET,
+            re.compile(
+                re.escape(FioBank.base_url)
+                + rf"by-id/{token}/[^/]+/[^/]+/transactions\.json"
+            ),
+            body=transactions_text,
+        )
         client = FioBank(token, decimal=True)
 
-        assert client.last_statement() == (2017, 12)
+        transactions = list(client.last_statement())
+
+        assert len(transactions) > 0
+        # the last statement (2017/12) is fetched via the by-id endpoint
+        assert f"by-id/{token}/2017/12/transactions.json" in resps.calls[1].request.url
 
 
-def test_last_statement_year(token: str):
+def test_last_statement_year(token: str, transactions_text: str):
     with responses.RequestsMock() as resps:
-        url = FioBank.base_url + f"lastStatement/{token}/statement"
-        resps.add(responses.GET, url, body="2017,12")
+        resps.add(
+            responses.GET,
+            FioBank.base_url + f"lastStatement/{token}/statement",
+            body="2016,3",
+        )
+        resps.add(
+            responses.GET,
+            re.compile(
+                re.escape(FioBank.base_url)
+                + rf"by-id/{token}/[^/]+/[^/]+/transactions\.json"
+            ),
+            body=transactions_text,
+        )
         client = FioBank(token, decimal=True)
 
-        assert client.last_statement(year=2017) == (2017, 12)
-        assert resps.calls[0].request.params == {"year": "2017"}
+        list(client.last_statement(2016))
+
+        assert resps.calls[0].request.params == {"year": "2016"}
+        assert f"by-id/{token}/2016/3/transactions.json" in resps.calls[1].request.url
 
 
 def test_last_statement_none(token: str):
     with responses.RequestsMock() as resps:
-        url = FioBank.base_url + f"lastStatement/{token}/statement"
-        resps.add(responses.GET, url, body="null,null")
+        resps.add(
+            responses.GET,
+            FioBank.base_url + f"lastStatement/{token}/statement",
+            body="null,null",
+        )
         client = FioBank(token, decimal=True)
 
-        assert client.last_statement(year=2000) is None
+        with pytest.raises(ValueError, match="No data available"):
+            client.last_statement(2000)
 
 
 def test_409_conflict(token: str, transactions_text: str):
