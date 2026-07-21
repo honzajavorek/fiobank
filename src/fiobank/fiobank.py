@@ -15,7 +15,8 @@ from tenacity import (
 )
 
 from .exceptions import ThrottlingError
-from .utils import coerce_date, sanitize_value
+from .models import Info, Transaction
+from .utils import coerce_date
 
 
 class FioBank:
@@ -49,37 +50,21 @@ class FioBank:
             )
             self.float_type = float
 
-        # http://www.fio.cz/xsd/IBSchema.xsd
-        self.transaction_schema = {
-            "column0": ("date", coerce_date),
-            "column1": ("amount", self.float_type),
-            "column2": ("account_number", str),
-            "column3": ("bank_code", str),
-            "column4": ("constant_symbol", str),
-            "column5": ("variable_symbol", str),
-            "column6": ("specific_symbol", str),
-            "column7": ("user_identification", str),
-            "column8": ("type", str),
-            "column9": ("executor", str),
-            "column10": ("account_name", str),
-            "column12": ("bank_name", str),
-            "column14": ("currency", str),
-            "column16": ("recipient_message", str),
-            "column17": ("instruction_id", str),
-            "column18": ("specification", str),
-            "column22": ("transaction_id", str),
-            "column25": ("comment", str),
-            "column26": ("bic", str),
-            "column27": ("reference", str),
-        }
-        self.info_schema = {
-            "accountid": ("account_number", str),
-            "bankid": ("bank_code", str),
-            "currency": ("currency", str),
-            "iban": ("iban", str),
-            "bic": ("bic", str),
-            "closingbalance": ("balance", self.float_type),
-        }
+    @property
+    def transaction_schema(self) -> None:
+        raise NotImplementedError(
+            "'transaction_schema' has been removed. It was never a public "
+            "part of the API. Transactions are now parsed with the "
+            "'fiobank.models.Transaction' Pydantic model."
+        )
+
+    @property
+    def info_schema(self) -> None:
+        raise NotImplementedError(
+            "'info_schema' has been removed. It was never a public part of "
+            "the API. Account info is now parsed with the "
+            "'fiobank.models.Info' Pydantic model."
+        )
 
     @retry(
         retry=retry_if_exception_type(ThrottlingError),
@@ -119,48 +104,34 @@ class FioBank:
             return response.json(parse_float=self.float_type)
         return None
 
+    def _context(self) -> dict:
+        return {"money_type": self.float_type}
+
     def _parse_info(self, data: dict) -> dict:
-        # parse data from API
-        info = {}
-        for key, value in data["accountStatement"]["info"].items():
-            key = key.lower()
-            if key in self.info_schema:
-                field_name, convert = self.info_schema[key]
-                value = sanitize_value(value, convert)
-                info[field_name] = value
+        info = Info.model_validate(
+            data["accountStatement"]["info"], context=self._context()
+        ).model_dump()
 
         # make some refinements
         self._add_account_number_full(info)
 
-        # return data
         return info
 
     def _parse_transactions(self, data: dict) -> Generator[dict, None, None]:
-        schema = self.transaction_schema
         try:
             entries = data["accountStatement"]["transactionList"]["transaction"]
         except TypeError:
             entries = []
 
         for entry in entries:
-            # parse entry from API
-            trans = {}
-            for column_name, column_data in entry.items():
-                if not column_data:
-                    continue
-                field_name, convert = schema[column_name.lower()]
-                value = sanitize_value(column_data["value"], convert)
-                trans[field_name] = value
-
-            # add missing fileds with None values
-            for column_data_name, (field_name, convert) in schema.items():
-                trans.setdefault(field_name, None)
+            trans = Transaction.model_validate(
+                entry, context=self._context()
+            ).model_dump()
 
             # make some refinements
-            specification = trans.get("specification")
-            is_amount = self._amount_re.match
-            if specification is not None and is_amount(specification):
-                amount, currency = trans["specification"].split(" ")
+            specification = trans["specification"]
+            if specification is not None and self._amount_re.match(specification):
+                amount, currency = specification.split(" ")
                 trans["original_amount"] = self.float_type(amount)
                 trans["original_currency"] = currency
             else:
@@ -169,7 +140,6 @@ class FioBank:
 
             self._add_account_number_full(trans)
 
-            # generate transaction data
             yield trans
 
     def _add_account_number_full(self, obj: dict) -> None:
