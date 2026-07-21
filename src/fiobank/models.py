@@ -1,7 +1,6 @@
-from __future__ import annotations
-
 import datetime
 from decimal import Decimal
+from typing import Optional, Union
 
 from pydantic import (
     BaseModel,
@@ -13,6 +12,9 @@ from pydantic import (
 )
 
 from .utils import coerce_date, sanitize_value
+
+
+Money = Optional[Union[float, Decimal]]
 
 
 def money_type(info: ValidationInfo) -> type:
@@ -35,26 +37,26 @@ class Transaction(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True, coerce_numbers_to_str=True)
 
-    date: datetime.date | None = Field(None, alias="column0")
-    amount: float | Decimal | None = Field(None, alias="column1")
-    account_number: str | None = Field(None, alias="column2")
-    bank_code: str | None = Field(None, alias="column3")
-    constant_symbol: str | None = Field(None, alias="column4")
-    variable_symbol: str | None = Field(None, alias="column5")
-    specific_symbol: str | None = Field(None, alias="column6")
-    user_identification: str | None = Field(None, alias="column7")
-    type: str | None = Field(None, alias="column8")
-    executor: str | None = Field(None, alias="column9")
-    account_name: str | None = Field(None, alias="column10")
-    bank_name: str | None = Field(None, alias="column12")
-    currency: str | None = Field(None, alias="column14")
-    recipient_message: str | None = Field(None, alias="column16")
-    instruction_id: str | None = Field(None, alias="column17")
-    specification: str | None = Field(None, alias="column18")
-    transaction_id: str | None = Field(None, alias="column22")
-    comment: str | None = Field(None, alias="column25")
-    bic: str | None = Field(None, alias="column26")
-    reference: str | None = Field(None, alias="column27")
+    date: Optional[datetime.date] = Field(None, alias="column0")
+    amount: Money = Field(None, alias="column1")
+    account_number: Optional[str] = Field(None, alias="column2")
+    bank_code: Optional[str] = Field(None, alias="column3")
+    constant_symbol: Optional[str] = Field(None, alias="column4")
+    variable_symbol: Optional[str] = Field(None, alias="column5")
+    specific_symbol: Optional[str] = Field(None, alias="column6")
+    user_identification: Optional[str] = Field(None, alias="column7")
+    type: Optional[str] = Field(None, alias="column8")
+    executor: Optional[str] = Field(None, alias="column9")
+    account_name: Optional[str] = Field(None, alias="column10")
+    bank_name: Optional[str] = Field(None, alias="column12")
+    currency: Optional[str] = Field(None, alias="column14")
+    recipient_message: Optional[str] = Field(None, alias="column16")
+    instruction_id: Optional[str] = Field(None, alias="column17")
+    specification: Optional[str] = Field(None, alias="column18")
+    transaction_id: Optional[str] = Field(None, alias="column22")
+    comment: Optional[str] = Field(None, alias="column25")
+    bic: Optional[str] = Field(None, alias="column26")
+    reference: Optional[str] = Field(None, alias="column27")
 
     @model_validator(mode="before")
     @classmethod
@@ -81,12 +83,12 @@ class Info(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True, coerce_numbers_to_str=True)
 
-    account_number: str | None = Field(None, alias="accountId")
-    bank_code: str | None = Field(None, alias="bankId")
-    currency: str | None = Field(None, alias="currency")
-    iban: str | None = Field(None, alias="iban")
-    bic: str | None = Field(None, alias="bic")
-    balance: float | Decimal | None = Field(None, alias="closingBalance")
+    account_number: Optional[str] = Field(None, alias="accountId")
+    bank_code: Optional[str] = Field(None, alias="bankId")
+    currency: Optional[str] = Field(None, alias="currency")
+    iban: Optional[str] = Field(None, alias="iban")
+    bic: Optional[str] = Field(None, alias="bic")
+    balance: Money = Field(None, alias="closingBalance")
 
     @field_validator("balance", mode="before")
     @classmethod
