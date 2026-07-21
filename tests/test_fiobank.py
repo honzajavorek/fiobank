@@ -89,7 +89,9 @@ def test_info_uses_today(transactions_json: dict):
     client = FioBank("...")
     today = date.today()
 
-    with mock.patch.object(client, "_request", return_value=transactions_json) as stub:
+    with mock.patch.object(
+        client, "_request_json", return_value=transactions_json
+    ) as stub:
         client.info()
         stub.assert_called_once_with("periods", from_date=today, to_date=today)
 
@@ -219,7 +221,7 @@ def test_period_coerces_date(transactions_json):
     to_date = "2016-08-30T11:45:38"
 
     options = {"return_value": transactions_json}
-    with mock.patch.object(client, "_request", **options) as stub:
+    with mock.patch.object(client, "_request_json", **options) as stub:
         client.period(from_date, to_date)
         stub.assert_called_once_with(
             "periods", from_date=date(2016, 8, 4), to_date=date(2016, 8, 30)
@@ -230,7 +232,7 @@ def test_statement(transactions_json):
     client = FioBank("...")
 
     options = {"return_value": transactions_json}
-    with mock.patch.object(client, "_request", **options) as stub:
+    with mock.patch.object(client, "_request_json", **options) as stub:
         client.statement(2016, 308)
         stub.assert_called_once_with("by-id", year=2016, number=308)
 
@@ -251,7 +253,7 @@ def test_last_from_id(transactions_json):
     client = FioBank("...")
 
     options = {"return_value": transactions_json}
-    with mock.patch.object(client, "_request", **options) as stub:
+    with mock.patch.object(client, "_request_json", **options) as stub:
         client.last(from_id=308)
         stub.assert_has_calls(
             [
@@ -266,7 +268,7 @@ def test_last_from_date(transactions_json, test_input):
     client = FioBank("...")
 
     options = {"return_value": transactions_json}
-    with mock.patch.object(client, "_request", **options) as stub:
+    with mock.patch.object(client, "_request_json", **options) as stub:
         client.last(from_date=test_input)
         stub.assert_has_calls(
             [

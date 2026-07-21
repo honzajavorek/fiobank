@@ -77,7 +77,7 @@ class FioBank:
         stop=stop_after_attempt(3),
         wait=wait_random_exponential(max=2 * 60),
     )
-    def _get(self, url: str, params: dict | None = None) -> requests.Response:
+    def _request(self, url: str, params: dict | None = None) -> requests.Response:
         response = requests.get(url, params=params, timeout=self.request_timeout)
         if response.status_code == requests.codes["conflict"]:
             raise ThrottlingError()
@@ -104,11 +104,11 @@ class FioBank:
 
         return response
 
-    def _request(self, action: str, **params) -> dict | None:
+    def _request_json(self, action: str, **params) -> dict | None:
         url_template = self.base_url + self.actions[action]
         url = url_template.format(token=self.token, **params)
 
-        response = self._get(url)
+        response = self._request(url)
         if response.content:
             return response.json(parse_float=self.float_type)
         return None
@@ -161,14 +161,14 @@ class FioBank:
 
     def info(self) -> dict:
         today = date.today()
-        if data := self._request("periods", from_date=today, to_date=today):
+        if data := self._request_json("periods", from_date=today, to_date=today):
             return self._parse_info(data)
         raise ValueError("No data available")
 
     def _fetch_period(
         self, from_date: str | date | datetime, to_date: str | date | datetime
     ) -> dict:
-        if data := self._request(
+        if data := self._request_json(
             "periods", from_date=coerce_date(from_date), to_date=coerce_date(to_date)
         ):
             return data
@@ -188,7 +188,7 @@ class FioBank:
         raise ValueError("No data available")
 
     def statement(self, year: int, number: int) -> Generator[dict]:
-        if data := self._request("by-id", year=year, number=number):
+        if data := self._request_json("by-id", year=year, number=number):
             return self._parse_transactions(data)
         raise ValueError("No data available")
 
@@ -199,11 +199,11 @@ class FioBank:
             raise ValueError("Only one constraint is allowed.")
 
         if from_id:
-            self._request("set-last-id", from_id=from_id)
+            self._request_json("set-last-id", from_id=from_id)
         elif from_date:
-            self._request("set-last-date", from_date=coerce_date(from_date))
+            self._request_json("set-last-date", from_date=coerce_date(from_date))
 
-        if data := self._request("last"):
+        if data := self._request_json("last"):
             return data
         raise ValueError("No data available")
 
@@ -219,21 +219,16 @@ class FioBank:
         return (self._parse_info(data), self._parse_transactions(data))
 
     def _last_statement_number(self, year: int | None = None) -> tuple[int, int] | None:
-        # This endpoint isn't part of the official REST API documentation, but
-        # it's used by the official Fio 'api-plus' Java application. It returns
-        # the year and sequence number of the last statement, e.g. "2017,12",
-        # or "null,null" when there's no statement for the given year.
         url = self.base_url + self.actions["last-statement"].format(token=self.token)
         params = {"year": year} if year is not None else None
 
-        response = self._get(url, params=params)
+        response = self._request(url, params=params)
         year_value, _, number_value = response.text.strip().partition(",")
         if year_value == "null" or not number_value:
             return None
         return (int(year_value), int(number_value))
 
     def last_statement(self, year: int | None = None) -> Generator[dict]:
-        numbering = self._last_statement_number(year)
-        if numbering is None:
-            raise ValueError("No data available")
-        return self.statement(*numbering)
+        if numbering := self._last_statement_number(year):
+            return self.statement(*numbering)
+        raise ValueError("No data available")
