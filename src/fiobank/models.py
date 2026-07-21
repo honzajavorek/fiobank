@@ -60,7 +60,7 @@ class Transaction(BaseModel):
     @classmethod
     def _unwrap_columns(cls, data: dict) -> dict:
         return {
-            key.lower(): sanitize_value(column.get("value"))
+            key: sanitize_value(column.get("value"))
             for key, column in data.items()
             if isinstance(column, dict)
         }
@@ -81,19 +81,12 @@ class Info(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True, coerce_numbers_to_str=True)
 
-    account_number: str | None = Field(None, alias="accountid")
-    bank_code: str | None = Field(None, alias="bankid")
+    account_number: str | None = Field(None, alias="accountId")
+    bank_code: str | None = Field(None, alias="bankId")
     currency: str | None = Field(None, alias="currency")
     iban: str | None = Field(None, alias="iban")
     bic: str | None = Field(None, alias="bic")
-    balance: float | Decimal | None = Field(None, alias="closingbalance")
-
-    @model_validator(mode="before")
-    @classmethod
-    def _normalize(cls, data: dict) -> dict:
-        # The API is inconsistent about the casing of the keys, so we
-        # lower-case them to match them against the (lower-cased) aliases.
-        return {key.lower(): sanitize_value(value) for key, value in data.items()}
+    balance: float | Decimal | None = Field(None, alias="closingBalance")
 
     @field_validator("balance", mode="before")
     @classmethod

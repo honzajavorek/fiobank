@@ -94,19 +94,6 @@ def test_info_uses_today(transactions_json: dict):
         stub.assert_called_once_with("periods", from_date=today, to_date=today)
 
 
-def test_info_is_case_insensitive(transactions_json):
-    client = FioBank("...")
-
-    api_info = transactions_json["accountStatement"]["info"]
-    value = api_info["accountId"]
-    del api_info["accountId"]
-    api_info["acCOUNTid"] = value
-
-    sdk_info = client._parse_info(transactions_json)
-
-    assert sdk_info["account_number"] == value
-
-
 @pytest.mark.parametrize(
     "api_key, sdk_key",
     [
@@ -290,9 +277,9 @@ def test_last_from_date(transactions_json, test_input):
 
 
 def test_transaction_schema_is_complete():
-    # The XSD lives on www.fio.cz, which is not reachable from some sandboxed
-    # runtimes (e.g. the Copilot/agent coding environment). Skip cleanly there
-    # rather than failing; CI has network access and runs the assertion.
+    # The XSD lives on www.fio.cz, which might not be reachable from some sandboxed
+    # runtimes (e.g. AI agent coding environment). Skip cleanly there
+    # rather than failing. CI has network access and runs the assertion.
     try:
         response = requests.get("https://www.fio.cz/xsd/IBSchema.xsd", timeout=10)
         response.raise_for_status()
