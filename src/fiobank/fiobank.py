@@ -22,6 +22,10 @@ from .utils import coerce_date
 class FioBank:
     base_url = "https://fioapi.fio.cz/v1/rest/"
 
+    # Seconds to wait for the API before giving up, so an unresponsive
+    # server can't hang the caller indefinitely.
+    request_timeout = 60
+
     actions = {
         "periods": "periods/{token}/{from_date}/{to_date}/transactions.json",
         "by-id": "by-id/{token}/{year}/{number}/transactions.json",
@@ -74,7 +78,7 @@ class FioBank:
         wait=wait_random_exponential(max=2 * 60),
     )
     def _get(self, url: str, params: dict | None = None) -> requests.Response:
-        response = requests.get(url, params=params)
+        response = requests.get(url, params=params, timeout=self.request_timeout)
         if response.status_code == requests.codes["conflict"]:
             raise ThrottlingError()
 
