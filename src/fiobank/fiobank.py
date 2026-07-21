@@ -127,7 +127,7 @@ class FioBank:
 
             # make some refinements
             specification = trans["specification"]
-            if specification is not None and self._amount_re.match(specification):
+            if specification is not None and self._amount_re.fullmatch(specification):
                 amount, currency = specification.split(" ")
                 trans["original_amount"] = self.float_type(amount)
                 trans["original_currency"] = currency

@@ -294,7 +294,7 @@ def test_transaction_schema_is_complete():
     # runtimes (e.g. the Copilot/agent coding environment). Skip cleanly there
     # rather than failing; CI has network access and runs the assertion.
     try:
-        response = requests.get("http://www.fio.cz/xsd/IBSchema.xsd", timeout=10)
+        response = requests.get("https://www.fio.cz/xsd/IBSchema.xsd", timeout=10)
         response.raise_for_status()
     except requests.RequestException as e:
         pytest.skip(f"www.fio.cz is not reachable from this runtime: {e}")

@@ -60,7 +60,7 @@ class Transaction(BaseModel):
     @classmethod
     def _unwrap_columns(cls, data: dict) -> dict:
         return {
-            key.lower(): sanitize_value(column["value"])
+            key.lower(): sanitize_value(column.get("value"))
             for key, column in data.items()
             if isinstance(column, dict)
         }
