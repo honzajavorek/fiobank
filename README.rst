@@ -77,6 +77,20 @@ Listing transactions from a single account statement:
 
     >>> client.statement(2013, 1)  # 1 is January only by coincidence - arguments mean 'first statement of 2013'
 
+Finding the last (most recent) account statement:
+
+.. code:: python
+
+    >>> client.last_statement()  # (year, number) of the last statement, e.g. (2013, 12)
+    >>> client.last_statement(year=2013)  # last statement number for a given year
+    >>> client.last_statement(year=2000)  # None when there's no statement for the year
+
+The returned ``(year, number)`` pair can be passed straight to ``statement()``:
+
+.. code:: python
+
+    >>> client.statement(*client.last_statement())
+
 Listing the latest transactions:
 
 .. code:: python

@@ -28,6 +28,7 @@ class FioBank:
         "last": "last/{token}/transactions.json",
         "set-last-id": "set-last-id/{token}/{from_id}/",
         "set-last-date": "set-last-date/{token}/{from_date}/",
+        "last-statement": "lastStatement/{token}/statement",
     }
 
     _amount_re = re.compile(r"\-?\d+(\.\d+)? [A-Z]{3}")
@@ -72,11 +73,8 @@ class FioBank:
         stop=stop_after_attempt(3),
         wait=wait_random_exponential(max=2 * 60),
     )
-    def _request(self, action: str, **params) -> dict | None:
-        url_template = self.base_url + self.actions[action]
-        url = url_template.format(token=self.token, **params)
-
-        response = requests.get(url)
+    def _get(self, url: str, params: dict | None = None) -> requests.Response:
+        response = requests.get(url, params=params)
         if response.status_code == requests.codes["conflict"]:
             raise ThrottlingError()
 
@@ -100,6 +98,13 @@ class FioBank:
 
             raise requests.HTTPError(sanitized_msg, response=response)
 
+        return response
+
+    def _request(self, action: str, **params) -> dict | None:
+        url_template = self.base_url + self.actions[action]
+        url = url_template.format(token=self.token, **params)
+
+        response = self._get(url)
         if response.content:
             return response.json(parse_float=self.float_type)
         return None
@@ -208,3 +213,18 @@ class FioBank:
     ) -> tuple[dict, Generator[dict]]:
         data = self._fetch_last(from_id, from_date)
         return (self._parse_info(data), self._parse_transactions(data))
+
+    def last_statement(self, year: int | None = None) -> tuple[int, int] | None:
+        # This endpoint isn't part of the official REST API documentation, but
+        # it's used by the official Fio 'api-plus' Java application. It returns
+        # the year and sequence number of the last statement, e.g. "2017,12",
+        # or "null,null" when there's no statement for the given year. The
+        # returned sequence number can be passed to 'statement()'.
+        url = self.base_url + self.actions["last-statement"].format(token=self.token)
+        params = {"year": year} if year is not None else None
+
+        response = self._get(url, params=params)
+        year_value, _, number_value = response.text.strip().partition(",")
+        if year_value == "null" or not number_value:
+            return None
+        return (int(year_value), int(number_value))
