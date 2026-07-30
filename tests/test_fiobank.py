@@ -17,6 +17,9 @@ from fiobank import FioBank
 from fiobank.models import Transaction
 
 
+BASE_URL = "https://fioapi.fio.cz/v1/rest/"
+
+
 @pytest.fixture()
 def token() -> str:
     return str(uuid.uuid4())
@@ -38,11 +41,11 @@ def transactions_json() -> dict:
 def client_float(token: str, transactions_text: str):
     with responses.RequestsMock(assert_all_requests_are_fired=False) as resps:
         url = re.compile(
-            re.escape(FioBank.base_url) + rf"[^/]+/{token}/([^/]+/)*transactions\.json"
+            re.escape(BASE_URL) + rf"[^/]+/{token}/([^/]+/)*transactions\.json"
         )
         resps.add(responses.GET, url, body=transactions_text)
 
-        url = re.compile(re.escape(FioBank.base_url) + rf"set-last-\w+/{token}/[^/]+/")
+        url = re.compile(re.escape(BASE_URL) + rf"set-last-\w+/{token}/[^/]+/")
         resps.add(responses.GET, url)
 
         yield FioBank(token)
@@ -52,11 +55,11 @@ def client_float(token: str, transactions_text: str):
 def client_decimal(token: str, transactions_text: str):
     with responses.RequestsMock(assert_all_requests_are_fired=False) as resps:
         url = re.compile(
-            re.escape(FioBank.base_url) + rf"[^/]+/{token}/([^/]+/)*transactions\.json"
+            re.escape(BASE_URL) + rf"[^/]+/{token}/([^/]+/)*transactions\.json"
         )
         resps.add(responses.GET, url, body=transactions_text)
 
-        url = re.compile(re.escape(FioBank.base_url) + rf"set-last-\w+/{token}/[^/]+/")
+        url = re.compile(re.escape(BASE_URL) + rf"set-last-\w+/{token}/[^/]+/")
         resps.add(responses.GET, url)
 
         yield FioBank(token, decimal=True)
@@ -241,6 +244,30 @@ def test_statement(transactions_json):
 def test_invalid_token(bad_token):
     with pytest.raises(ValueError, match="Token cannot be None or empty"):
         FioBank(token=bad_token)
+
+
+def test_default_base_url_and_timeout():
+    client = FioBank("...")
+
+    assert client.base_url == BASE_URL
+    assert client.request_timeout == 60
+
+
+def test_custom_base_url_and_timeout(token: str, transactions_text: str):
+    base_url = "https://example.test/rest/"
+    with responses.RequestsMock() as resps:
+        resps.add(
+            responses.GET,
+            re.compile(re.escape(base_url) + rf"last/{token}/transactions\.json"),
+            body=transactions_text,
+        )
+        client = FioBank(token, decimal=True, base_url=base_url, request_timeout=5)
+
+        assert client.base_url == base_url
+        assert client.request_timeout == 5
+        # the custom base_url is actually used for requests
+        next(client.last())
+        assert resps.calls[0].request.url.startswith(base_url)
 
 
 def test_last_conflicting_params():
@@ -477,14 +504,13 @@ def test_last_statement(token: str, transactions_text: str):
     with responses.RequestsMock() as resps:
         resps.add(
             responses.GET,
-            FioBank.base_url + f"lastStatement/{token}/statement",
+            BASE_URL + f"lastStatement/{token}/statement",
             body="2017,12",
         )
         resps.add(
             responses.GET,
             re.compile(
-                re.escape(FioBank.base_url)
-                + rf"by-id/{token}/[^/]+/[^/]+/transactions\.json"
+                re.escape(BASE_URL) + rf"by-id/{token}/[^/]+/[^/]+/transactions\.json"
             ),
             body=transactions_text,
         )
@@ -501,14 +527,13 @@ def test_last_statement_year(token: str, transactions_text: str):
     with responses.RequestsMock() as resps:
         resps.add(
             responses.GET,
-            FioBank.base_url + f"lastStatement/{token}/statement",
+            BASE_URL + f"lastStatement/{token}/statement",
             body="2016,3",
         )
         resps.add(
             responses.GET,
             re.compile(
-                re.escape(FioBank.base_url)
-                + rf"by-id/{token}/[^/]+/[^/]+/transactions\.json"
+                re.escape(BASE_URL) + rf"by-id/{token}/[^/]+/[^/]+/transactions\.json"
             ),
             body=transactions_text,
         )
@@ -524,7 +549,7 @@ def test_last_statement_none(token: str):
     with responses.RequestsMock() as resps:
         resps.add(
             responses.GET,
-            FioBank.base_url + f"lastStatement/{token}/statement",
+            BASE_URL + f"lastStatement/{token}/statement",
             body="null,null",
         )
         client = FioBank(token, decimal=True)
@@ -536,7 +561,7 @@ def test_last_statement_none(token: str):
 def test_409_conflict(token: str, transactions_text: str):
     with responses.RequestsMock(registry=OrderedRegistry) as resps:
         url = re.compile(
-            re.escape(FioBank.base_url) + rf"[^/]+/{token}/([^/]+/)*transactions\.json"
+            re.escape(BASE_URL) + rf"[^/]+/{token}/([^/]+/)*transactions\.json"
         )
         resps.add(responses.GET, url, status=409)
         resps.add(responses.GET, url, body=transactions_text)
@@ -558,8 +583,7 @@ def test_http_error_with_token_redaction(token: str):
 
     with responses.RequestsMock() as resps:
         url = re.compile(
-            re.escape(FioBank.base_url)
-            + rf"periods/{token}/[^/]+/[^/]+/transactions\.json"
+            re.escape(BASE_URL) + rf"periods/{token}/[^/]+/[^/]+/transactions\.json"
         )
         resps.add(responses.GET, url, status=400, body=response_body)
         client = FioBank(token, decimal=True)

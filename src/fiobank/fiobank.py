@@ -20,13 +20,7 @@ from .utils import coerce_date
 
 
 class FioBank:
-    base_url = "https://fioapi.fio.cz/v1/rest/"
-
-    # Seconds to wait for the API before giving up, so an unresponsive
-    # server can't hang the caller indefinitely.
-    request_timeout = 60
-
-    actions = {
+    _actions = {
         "periods": "periods/{token}/{from_date}/{to_date}/transactions.json",
         "by-id": "by-id/{token}/{year}/{number}/transactions.json",
         "last": "last/{token}/transactions.json",
@@ -37,10 +31,22 @@ class FioBank:
 
     _amount_re = re.compile(r"\-?\d+(\.\d+)? [A-Z]{3}")
 
-    def __init__(self, token: str, *, decimal: bool = False):
+    def __init__(
+        self,
+        token: str,
+        *,
+        decimal: bool = False,
+        base_url: str = "https://fioapi.fio.cz/v1/rest/",
+        request_timeout: float = 60,
+    ):
         if not isinstance(token, str) or not token.strip():
             raise ValueError("Token cannot be None or empty")
         self.token = token.strip()
+
+        self.base_url = base_url
+        # Seconds to wait for the API before giving up, so an unresponsive
+        # server can't hang the caller indefinitely.
+        self.request_timeout = request_timeout
 
         if decimal:
             self.float_type = Decimal
@@ -105,7 +111,7 @@ class FioBank:
         return response
 
     def _request_json(self, action: str, **params) -> dict | None:
-        url_template = self.base_url + self.actions[action]
+        url_template = self.base_url + self._actions[action]
         url = url_template.format(token=self.token, **params)
 
         response = self._request(url)
@@ -219,7 +225,7 @@ class FioBank:
         return (self._parse_info(data), self._parse_transactions(data))
 
     def _last_statement_number(self, year: int | None = None) -> tuple[int, int] | None:
-        url = self.base_url + self.actions["last-statement"].format(token=self.token)
+        url = self.base_url + self._actions["last-statement"].format(token=self.token)
         params = {"year": year} if year is not None else None
 
         response = self._request(url, params=params)
