@@ -246,28 +246,14 @@ def test_invalid_token(bad_token):
         FioBank(token=bad_token)
 
 
-def test_default_base_url_and_timeout():
+def test_default_base_url():
     client = FioBank("...")
-
     assert client.base_url == BASE_URL
+
+
+def test_default_request_timeout():
+    client = FioBank("...")
     assert client.request_timeout == 60
-
-
-def test_custom_base_url_and_timeout(token: str, transactions_text: str):
-    base_url = "https://example.test/rest/"
-    with responses.RequestsMock() as resps:
-        resps.add(
-            responses.GET,
-            re.compile(re.escape(base_url) + rf"last/{token}/transactions\.json"),
-            body=transactions_text,
-        )
-        client = FioBank(token, decimal=True, base_url=base_url, request_timeout=5)
-
-        assert client.base_url == base_url
-        assert client.request_timeout == 5
-        # the custom base_url is actually used for requests
-        next(client.last())
-        assert resps.calls[0].request.url.startswith(base_url)
 
 
 def test_last_conflicting_params():

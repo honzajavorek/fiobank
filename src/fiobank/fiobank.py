@@ -44,8 +44,6 @@ class FioBank:
         self.token = token.strip()
 
         self.base_url = base_url
-        # Seconds to wait for the API before giving up, so an unresponsive
-        # server can't hang the caller indefinitely.
         self.request_timeout = request_timeout
 
         if decimal:
