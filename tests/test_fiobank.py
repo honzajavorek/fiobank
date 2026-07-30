@@ -89,7 +89,9 @@ def test_info_uses_today(transactions_json: dict):
     client = FioBank("...")
     today = date.today()
 
-    with mock.patch.object(client, "_request", return_value=transactions_json) as stub:
+    with mock.patch.object(
+        client, "_request_json", return_value=transactions_json
+    ) as stub:
         client.info()
         stub.assert_called_once_with("periods", from_date=today, to_date=today)
 
@@ -219,7 +221,7 @@ def test_period_coerces_date(transactions_json):
     to_date = "2016-08-30T11:45:38"
 
     options = {"return_value": transactions_json}
-    with mock.patch.object(client, "_request", **options) as stub:
+    with mock.patch.object(client, "_request_json", **options) as stub:
         client.period(from_date, to_date)
         stub.assert_called_once_with(
             "periods", from_date=date(2016, 8, 4), to_date=date(2016, 8, 30)
@@ -230,7 +232,7 @@ def test_statement(transactions_json):
     client = FioBank("...")
 
     options = {"return_value": transactions_json}
-    with mock.patch.object(client, "_request", **options) as stub:
+    with mock.patch.object(client, "_request_json", **options) as stub:
         client.statement(2016, 308)
         stub.assert_called_once_with("by-id", year=2016, number=308)
 
@@ -251,7 +253,7 @@ def test_last_from_id(transactions_json):
     client = FioBank("...")
 
     options = {"return_value": transactions_json}
-    with mock.patch.object(client, "_request", **options) as stub:
+    with mock.patch.object(client, "_request_json", **options) as stub:
         client.last(from_id=308)
         stub.assert_has_calls(
             [
@@ -266,7 +268,7 @@ def test_last_from_date(transactions_json, test_input):
     client = FioBank("...")
 
     options = {"return_value": transactions_json}
-    with mock.patch.object(client, "_request", **options) as stub:
+    with mock.patch.object(client, "_request_json", **options) as stub:
         client.last(from_date=test_input)
         stub.assert_has_calls(
             [
@@ -469,6 +471,66 @@ def test_transactions_parse_no_account_number_full(transactions_json):
     sdk_transaction = next(client._parse_transactions(transactions_json))
 
     assert sdk_transaction["account_number_full"] is None
+
+
+def test_last_statement(token: str, transactions_text: str):
+    with responses.RequestsMock() as resps:
+        resps.add(
+            responses.GET,
+            FioBank.base_url + f"lastStatement/{token}/statement",
+            body="2017,12",
+        )
+        resps.add(
+            responses.GET,
+            re.compile(
+                re.escape(FioBank.base_url)
+                + rf"by-id/{token}/[^/]+/[^/]+/transactions\.json"
+            ),
+            body=transactions_text,
+        )
+        client = FioBank(token, decimal=True)
+
+        transactions = list(client.last_statement())
+
+        assert len(transactions) > 0
+        # the last statement (2017/12) is fetched via the by-id endpoint
+        assert f"by-id/{token}/2017/12/transactions.json" in resps.calls[1].request.url
+
+
+def test_last_statement_year(token: str, transactions_text: str):
+    with responses.RequestsMock() as resps:
+        resps.add(
+            responses.GET,
+            FioBank.base_url + f"lastStatement/{token}/statement",
+            body="2016,3",
+        )
+        resps.add(
+            responses.GET,
+            re.compile(
+                re.escape(FioBank.base_url)
+                + rf"by-id/{token}/[^/]+/[^/]+/transactions\.json"
+            ),
+            body=transactions_text,
+        )
+        client = FioBank(token, decimal=True)
+
+        list(client.last_statement(2016))
+
+        assert resps.calls[0].request.params == {"year": "2016"}
+        assert f"by-id/{token}/2016/3/transactions.json" in resps.calls[1].request.url
+
+
+def test_last_statement_none(token: str):
+    with responses.RequestsMock() as resps:
+        resps.add(
+            responses.GET,
+            FioBank.base_url + f"lastStatement/{token}/statement",
+            body="null,null",
+        )
+        client = FioBank(token, decimal=True)
+
+        with pytest.raises(ValueError, match="No data available"):
+            client.last_statement(2000)
 
 
 def test_409_conflict(token: str, transactions_text: str):

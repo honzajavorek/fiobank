@@ -77,6 +77,18 @@ Listing transactions from a single account statement:
 
     >>> client.statement(2013, 1)  # 1 is January only by coincidence - arguments mean 'first statement of 2013'
 
+Listing transactions from the last (most recent) account statement:
+
+.. code:: python
+
+    >>> client.last_statement()  # transactions of the last statement
+    >>> client.last_statement(2013)  # transactions of the last statement of 2013
+
+This resolves the most recent statement number (via Fio's undocumented
+``lastStatement`` endpoint, also used by the official Fio API Plus application)
+and returns its transactions, just like ``statement()``. It raises
+``ValueError`` when there's no statement for the given year.
+
 Listing the latest transactions:
 
 .. code:: python
