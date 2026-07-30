@@ -145,15 +145,19 @@ Releasing
 Release flow is automated by GitHub Actions in
 `.github/workflows/release.yml`.
 
-1. Bump the version in `pyproject.toml` using `uv`::
+1. Make sure you have the latest commits::
+
+    git pull
+
+2. Bump the version in `pyproject.toml` using `uv`::
 
     uv version --bump patch  # or minor / major
 
-2. Review and commit the version change::
+3. Review and commit the version change::
 
     git commit -am "release vX.Y.Z"
 
-3. Create and push a git tag for that version::
+4. Create and push a git tag for that version::
 
     git tag vX.Y.Z
     git push origin HEAD --tags
