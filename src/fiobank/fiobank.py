@@ -106,7 +106,13 @@ class FioBankBase:
             raise ThrottlingError()
         if response.status_code >= 400:
             message = f"HTTP {response.status_code} for {url}"
-            body = response.text
+            try:
+                body = response.text
+            except UnicodeDecodeError:
+                # An intermediary (gateway, proxy, WAF) may return a non-UTF-8
+                # error body. Fall back to a lossy decode so the diagnostic
+                # survives instead of masking the HTTPError with a decode crash.
+                body = response.content.decode("utf-8", "replace")
             if body:
                 message = f"{message}. Response body: {body}"
             raise HTTPError(self._sanitize(message), status_code=response.status_code)
@@ -272,6 +278,21 @@ class FioBank(FioBankBase):
             return self.statement(*numbering)
         raise ValueError("No data available")
 
+    def close(self) -> None:
+        """Release the transport (and its default HTTP client, if any).
+
+        A no-op for custom transports that don't expose ``close()``.
+        """
+        close = getattr(self.transport, "close", None)
+        if callable(close):
+            close()
+
+    def __enter__(self) -> FioBank:
+        return self
+
+    def __exit__(self, *exc_info) -> None:
+        self.close()
+
 
 class AsyncFioBank(FioBankBase):
     def __init__(
@@ -380,3 +401,18 @@ class AsyncFioBank(FioBankBase):
         if numbering := await self._last_statement_number(year):
             return await self.statement(*numbering)
         raise ValueError("No data available")
+
+    async def aclose(self) -> None:
+        """Release the transport (and its default HTTP client, if any).
+
+        A no-op for custom transports that don't expose ``aclose()``.
+        """
+        aclose = getattr(self.transport, "aclose", None)
+        if callable(aclose):
+            await aclose()
+
+    async def __aenter__(self) -> AsyncFioBank:
+        return self
+
+    async def __aexit__(self, *exc_info) -> None:
+        await self.aclose()

@@ -153,6 +153,20 @@ The synchronous ``Transport`` and asynchronous ``AsyncTransport`` protocols
 (both exported from ``fiobank``) describe the single ``get()`` method a custom
 transport needs to implement.
 
+The default transports keep a persistent HTTP client (a connection pool) open.
+Use the client as a context manager -- or call ``close()`` / ``await
+aclose()`` -- to release it deterministically instead of waiting for garbage
+collection. An HTTP client you inject yourself stays under your control and is
+never closed for you.
+
+.. code:: python
+
+    >>> with FioBank(token='...', decimal=True) as client:
+    ...     info = client.info()
+    ...
+    >>> async with AsyncFioBank(token='...', decimal=True) as client:
+    ...     info = await client.info()
+
 Conflict Error
 --------------
 

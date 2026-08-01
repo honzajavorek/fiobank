@@ -39,22 +39,54 @@ class AsyncTransport(Protocol):
 
 
 class HTTPXTransport:
-    """Default synchronous transport, backed by :mod:`httpx`."""
+    """Default synchronous transport, backed by :mod:`httpx`.
+
+    Also usable as a context manager. ``close()`` only closes the underlying
+    client when the transport created it -- an injected client stays under
+    the caller's control.
+    """
 
     def __init__(self, *, timeout: float = 60, client: httpx.Client | None = None):
+        self._owns_client = client is None
         self.client = client or httpx.Client(timeout=timeout)
 
     def get(self, url: str, params: dict | None = None) -> Response:
         response = self.client.get(url, params=params)
         return Response(response.status_code, response.content)
 
+    def close(self) -> None:
+        if self._owns_client:
+            self.client.close()
+
+    def __enter__(self) -> HTTPXTransport:
+        return self
+
+    def __exit__(self, *exc_info) -> None:
+        self.close()
+
 
 class HTTPXAsyncTransport:
-    """Default asynchronous transport, backed by :mod:`httpx`."""
+    """Default asynchronous transport, backed by :mod:`httpx`.
+
+    Also usable as an async context manager. ``aclose()`` only closes the
+    underlying client when the transport created it -- an injected client
+    stays under the caller's control.
+    """
 
     def __init__(self, *, timeout: float = 60, client: httpx.AsyncClient | None = None):
+        self._owns_client = client is None
         self.client = client or httpx.AsyncClient(timeout=timeout)
 
     async def get(self, url: str, params: dict | None = None) -> Response:
         response = await self.client.get(url, params=params)
         return Response(response.status_code, response.content)
+
+    async def aclose(self) -> None:
+        if self._owns_client:
+            await self.client.aclose()
+
+    async def __aenter__(self) -> HTTPXAsyncTransport:
+        return self
+
+    async def __aexit__(self, *exc_info) -> None:
+        await self.aclose()

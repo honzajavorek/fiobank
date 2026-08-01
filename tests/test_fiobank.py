@@ -576,3 +576,20 @@ def test_http_error_with_token_redaction(token: str):
         assert token not in error_msg
         assert "***TOKEN***" in error_msg
         assert "Error occurred with token ***TOKEN*** in the response body" in error_msg
+
+
+def test_http_error_with_non_utf8_body(token: str):
+    # An intermediary (proxy/WAF) may return a non-UTF-8 error body; that must
+    # still surface as a clean HTTPError, not a UnicodeDecodeError crash.
+    with respx.mock() as router:
+        url = re.escape(BASE_URL) + rf"periods/{token}/[^/]+/[^/]+/transactions\.json"
+        router.get(url__regex=url).mock(
+            return_value=httpx.Response(502, content=b"\xff\xfe bad gateway")
+        )
+        client = FioBank(token, decimal=True)
+
+        with pytest.raises(HTTPError) as exc_info:
+            list(client.period("2025-01-01", "2025-02-01"))
+
+        assert exc_info.value.status_code == 502
+        assert "bad gateway" in str(exc_info.value)

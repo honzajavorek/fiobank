@@ -35,8 +35,8 @@ def test_httpx_transport_returns_response():
         router.get("https://example.test/").mock(
             return_value=httpx.Response(201, text="hello")
         )
-        transport = HTTPXTransport()
-        response = transport.get("https://example.test/")
+        with HTTPXTransport() as transport:
+            response = transport.get("https://example.test/")
 
     assert isinstance(response, Response)
     assert response.status_code == 201
@@ -48,12 +48,57 @@ async def test_httpx_async_transport_returns_response():
         router.get("https://example.test/").mock(
             return_value=httpx.Response(202, text="hello")
         )
-        transport = HTTPXAsyncTransport()
-        response = await transport.get("https://example.test/")
+        async with HTTPXAsyncTransport() as transport:
+            response = await transport.get("https://example.test/")
 
     assert isinstance(response, Response)
     assert response.status_code == 202
     assert response.text == "hello"
+
+
+def test_httpx_transport_close_owns_default_client():
+    transport = HTTPXTransport()
+    transport.close()
+    assert transport.client.is_closed
+
+
+def test_httpx_transport_close_leaves_injected_client_open():
+    client = httpx.Client()
+    transport = HTTPXTransport(client=client)
+    transport.close()
+    assert not client.is_closed
+    client.close()
+
+
+async def test_httpx_async_transport_aclose_owns_default_client():
+    transport = HTTPXAsyncTransport()
+    await transport.aclose()
+    assert transport.client.is_closed
+
+
+async def test_httpx_async_transport_aclose_leaves_injected_client_open():
+    client = httpx.AsyncClient()
+    transport = HTTPXAsyncTransport(client=client)
+    await transport.aclose()
+    assert not client.is_closed
+    await client.aclose()
+
+
+def test_fiobank_context_manager_closes_default_transport():
+    with FioBank("token", decimal=True) as client:
+        transport = client.transport
+    assert transport.client.is_closed
+
+
+async def test_async_fiobank_context_manager_closes_default_transport():
+    async with AsyncFioBank("token", decimal=True) as client:
+        transport = client.transport
+    assert transport.client.is_closed
+
+
+def test_fiobank_close_is_noop_for_transport_without_close():
+    client = FioBank("token", decimal=True, transport=FakeTransport("{}"))
+    client.close()  # must not raise even though FakeTransport has no close()
 
 
 class FakeTransport:
