@@ -107,6 +107,52 @@ Getting the latest transactions with account information in one request:
         <generator object _parse_transactions at 0x170c190>
    )
 
+Async
+-----
+
+``AsyncFioBank`` mirrors ``FioBank`` method for method, only the I/O is
+awaited. Parsing stays synchronous, so the transaction generators are the
+same in both variants -- you just ``await`` the call to get them:
+
+.. code:: python
+
+    >>> from fiobank import AsyncFioBank
+    >>> client = AsyncFioBank(token='...', decimal=True)
+    >>> info = await client.info()
+    >>> transactions = await client.period('2013-01-20', '2013-03-20')
+    >>> for transaction in transactions:
+    ...     ...
+
+HTTP client
+-----------
+
+By default ``FioBank`` talks to the API with `httpx
+<https://www.python-httpx.org/>`_ (``httpx.Client``) and ``AsyncFioBank``
+with ``httpx.AsyncClient``. Both accept a ``transport=`` argument, so you can
+plug in any HTTP client -- ``aiohttp``, ``urllib``, a caching or proxying
+layer, or a fake for tests. A transport does exactly one thing: GET a URL and
+return a status code plus the raw body bytes.
+
+.. code:: python
+
+    >>> from fiobank import FioBank, Response
+    >>>
+    >>> class RequestsTransport:
+    ...     def __init__(self, timeout=60):
+    ...         import requests
+    ...         self.timeout = timeout
+    ...         self.session = requests.Session()
+    ...
+    ...     def get(self, url, params=None):
+    ...         r = self.session.get(url, params=params, timeout=self.timeout)
+    ...         return Response(r.status_code, r.content)
+    ...
+    >>> client = FioBank(token='...', decimal=True, transport=RequestsTransport())
+
+The synchronous ``Transport`` and asynchronous ``AsyncTransport`` protocols
+(both exported from ``fiobank``) describe the single ``get()`` method a custom
+transport needs to implement.
+
 Conflict Error
 --------------
 
@@ -117,6 +163,14 @@ Conflict Error
 The client automatically retries throttling errors up to 3 times with
 exponential backoff. If all attempts fail,
 ``fiobank.ThrottlingError`` will be raised.
+
+HTTP Errors
+-----------
+
+Any other non-2xx response raises ``fiobank.HTTPError`` (with the API token
+redacted from the message). This is transport-independent -- earlier versions
+leaked ``requests.HTTPError``, which is exactly what made the HTTP client
+impossible to swap out.
 
 Notes
 -----
