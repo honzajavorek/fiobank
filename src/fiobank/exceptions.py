@@ -11,9 +11,8 @@ class ThrottlingError(Exception):
 class HTTPError(Exception):
     """Raised for non-2xx HTTP responses.
 
-    Replaces the ``requests.HTTPError`` that older versions leaked. The
-    message has the API token redacted; ``status_code`` carries the HTTP
-    status of the offending response.
+    The message has the API token redacted; ``status_code`` carries the
+    HTTP status of the offending response.
     """
 
     def __init__(self, message: str, *, status_code: int | None = None):

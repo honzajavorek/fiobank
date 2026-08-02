@@ -21,72 +21,53 @@ class Response:
 
     @property
     def text(self) -> str:
-        # Fio always returns UTF-8, so decoding here is deterministic and
-        # avoids depending on any HTTP client's encoding guessing.
+        """Decode the body as UTF-8.
+
+        Fio always returns UTF-8, so this is deterministic and avoids
+        depending on any HTTP client's encoding guessing.
+        """
         return self.content.decode("utf-8")
 
 
 class Transport(Protocol):
-    """A synchronous transport does one thing: GET a URL."""
+    """A synchronous transport: GET a URL, then close."""
 
-    def get(self, url: str, params: dict | None = None) -> Response: ...
+    def get(self, url: str) -> Response: ...
+
+    def close(self) -> None: ...
 
 
 class AsyncTransport(Protocol):
-    """An asynchronous transport does one thing: GET a URL."""
+    """An asynchronous transport: GET a URL, then close."""
 
-    async def get(self, url: str, params: dict | None = None) -> Response: ...
+    async def get(self, url: str) -> Response: ...
+
+    async def aclose(self) -> None: ...
 
 
 class HTTPXTransport:
-    """Default synchronous transport, backed by :mod:`httpx`.
-
-    Also usable as a context manager. ``close()`` only closes the underlying
-    client when the transport created it -- an injected client stays under
-    the caller's control.
-    """
+    """Default synchronous transport, backed by :mod:`httpx`."""
 
     def __init__(self, *, timeout: float = 60, client: httpx.Client | None = None):
-        self._owns_client = client is None
         self.client = client or httpx.Client(timeout=timeout)
 
-    def get(self, url: str, params: dict | None = None) -> Response:
-        response = self.client.get(url, params=params)
+    def get(self, url: str) -> Response:
+        response = self.client.get(url)
         return Response(response.status_code, response.content)
 
     def close(self) -> None:
-        if self._owns_client:
-            self.client.close()
-
-    def __enter__(self) -> HTTPXTransport:
-        return self
-
-    def __exit__(self, *exc_info) -> None:
-        self.close()
+        self.client.close()
 
 
 class HTTPXAsyncTransport:
-    """Default asynchronous transport, backed by :mod:`httpx`.
-
-    Also usable as an async context manager. ``aclose()`` only closes the
-    underlying client when the transport created it -- an injected client
-    stays under the caller's control.
-    """
+    """Default asynchronous transport, backed by :mod:`httpx`."""
 
     def __init__(self, *, timeout: float = 60, client: httpx.AsyncClient | None = None):
-        self._owns_client = client is None
         self.client = client or httpx.AsyncClient(timeout=timeout)
 
-    async def get(self, url: str, params: dict | None = None) -> Response:
-        response = await self.client.get(url, params=params)
+    async def get(self, url: str) -> Response:
+        response = await self.client.get(url)
         return Response(response.status_code, response.content)
 
     async def aclose(self) -> None:
-        if self._owns_client:
-            await self.client.aclose()
-
-    async def __aenter__(self) -> HTTPXAsyncTransport:
-        return self
-
-    async def __aexit__(self, *exc_info) -> None:
-        await self.aclose()
+        await self.client.aclose()

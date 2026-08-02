@@ -6,6 +6,7 @@ import warnings
 from collections.abc import Generator
 from datetime import date, datetime
 from decimal import Decimal
+from urllib.parse import urlencode
 
 from tenacity import (
     retry,
@@ -199,8 +200,8 @@ class FioBank(FioBankBase):
         stop=stop_after_attempt(3),
         wait=wait_random_exponential(max=2 * 60),
     )
-    def _request(self, url: str, params: dict | None = None) -> Response:
-        response = self.transport.get(url, params)
+    def _request(self, url: str) -> Response:
+        response = self.transport.get(url)
         self._check(url, response)
         return response
 
@@ -269,9 +270,9 @@ class FioBank(FioBankBase):
 
     def _last_statement_number(self, year: int | None = None) -> tuple[int, int] | None:
         url = self._build_url("last-statement")
-        params = {"year": year} if year is not None else None
-        response = self._request(url, params=params)
-        return self._parse_statement_number(response)
+        if year is not None:
+            url = f"{url}?{urlencode({'year': year})}"
+        return self._parse_statement_number(self._request(url))
 
     def last_statement(self, year: int | None = None) -> Generator[dict]:
         if numbering := self._last_statement_number(year):
@@ -279,13 +280,8 @@ class FioBank(FioBankBase):
         raise ValueError("No data available")
 
     def close(self) -> None:
-        """Release the transport (and its default HTTP client, if any).
-
-        A no-op for custom transports that don't expose ``close()``.
-        """
-        close = getattr(self.transport, "close", None)
-        if callable(close):
-            close()
+        """Close the transport once the client is no longer needed."""
+        self.transport.close()
 
     def __enter__(self) -> FioBank:
         return self
@@ -320,9 +316,8 @@ class AsyncFioBank(FioBankBase):
         stop=stop_after_attempt(3),
         wait=wait_random_exponential(max=2 * 60),
     )
-    async def _request(self, url: str, params: dict | None = None) -> Response:
-        # tenacity detects the coroutine and retries it with AsyncRetrying.
-        response = await self.transport.get(url, params)
+    async def _request(self, url: str) -> Response:
+        response = await self.transport.get(url)
         self._check(url, response)
         return response
 
@@ -393,9 +388,9 @@ class AsyncFioBank(FioBankBase):
         self, year: int | None = None
     ) -> tuple[int, int] | None:
         url = self._build_url("last-statement")
-        params = {"year": year} if year is not None else None
-        response = await self._request(url, params=params)
-        return self._parse_statement_number(response)
+        if year is not None:
+            url = f"{url}?{urlencode({'year': year})}"
+        return self._parse_statement_number(await self._request(url))
 
     async def last_statement(self, year: int | None = None) -> Generator[dict]:
         if numbering := await self._last_statement_number(year):
@@ -403,13 +398,8 @@ class AsyncFioBank(FioBankBase):
         raise ValueError("No data available")
 
     async def aclose(self) -> None:
-        """Release the transport (and its default HTTP client, if any).
-
-        A no-op for custom transports that don't expose ``aclose()``.
-        """
-        aclose = getattr(self.transport, "aclose", None)
-        if callable(aclose):
-            await aclose()
+        """Close the transport once the client is no longer needed."""
+        await self.transport.aclose()
 
     async def __aenter__(self) -> AsyncFioBank:
         return self

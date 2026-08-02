@@ -1,16 +1,12 @@
 from __future__ import annotations
 
-import json
-import os
 import re
-import uuid
 from datetime import date
 from decimal import Decimal
 from unittest import mock
 
 import httpx
 import pytest
-import respx
 
 from fiobank import FioBank, HTTPError
 from fiobank.models import Transaction
@@ -20,48 +16,13 @@ BASE_URL = "https://fioapi.fio.cz/v1/rest/"
 
 
 @pytest.fixture()
-def token() -> str:
-    return str(uuid.uuid4())
+def client_float(sync_client, transactions_handler) -> FioBank:
+    return sync_client(transactions_handler, decimal=False)
 
 
 @pytest.fixture()
-def transactions_text() -> str:
-    with open(os.path.dirname(__file__) + "/transactions.json") as f:
-        return f.read()
-
-
-@pytest.fixture()
-def transactions_json() -> dict:
-    with open(os.path.dirname(__file__) + "/transactions.json") as f:
-        return json.load(f)
-
-
-@pytest.fixture()
-def client_float(token: str, transactions_text: str):
-    with respx.mock(assert_all_called=False) as router:
-        url = re.escape(BASE_URL) + rf"[^/]+/{token}/([^/]+/)*transactions\.json"
-        router.get(url__regex=url).mock(
-            return_value=httpx.Response(200, text=transactions_text)
-        )
-
-        url = re.escape(BASE_URL) + rf"set-last-\w+/{token}/[^/]+/"
-        router.get(url__regex=url).mock(return_value=httpx.Response(200))
-
-        yield FioBank(token)
-
-
-@pytest.fixture()
-def client_decimal(token: str, transactions_text: str):
-    with respx.mock(assert_all_called=False) as router:
-        url = re.escape(BASE_URL) + rf"[^/]+/{token}/([^/]+/)*transactions\.json"
-        router.get(url__regex=url).mock(
-            return_value=httpx.Response(200, text=transactions_text)
-        )
-
-        url = re.escape(BASE_URL) + rf"set-last-\w+/{token}/[^/]+/"
-        router.get(url__regex=url).mock(return_value=httpx.Response(200))
-
-        yield FioBank(token, decimal=True)
+def client_decimal(sync_client, transactions_handler) -> FioBank:
+    return sync_client(transactions_handler, decimal=True)
 
 
 def test_client_decimal(client_decimal: FioBank):
@@ -485,67 +446,49 @@ def test_transactions_parse_no_account_number_full(transactions_json):
     assert sdk_transaction["account_number_full"] is None
 
 
-def test_last_statement(token: str, transactions_text: str):
-    with respx.mock() as router:
-        router.get(BASE_URL + f"lastStatement/{token}/statement").mock(
-            return_value=httpx.Response(200, text="2017,12")
-        )
-        by_id = router.get(
-            url__regex=re.escape(BASE_URL)
-            + rf"by-id/{token}/[^/]+/[^/]+/transactions\.json"
-        ).mock(return_value=httpx.Response(200, text=transactions_text))
-        client = FioBank(token, decimal=True)
+def _statement_handler(number_text: str, transactions_text: str, requests: list):
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        if request.url.path.endswith("statement"):
+            return httpx.Response(200, text=number_text)
+        return httpx.Response(200, text=transactions_text)
 
-        transactions = list(client.last_statement())
-
-        assert len(transactions) > 0
-        # the last statement (2017/12) is fetched via the by-id endpoint
-        assert f"by-id/{token}/2017/12/transactions.json" in str(
-            by_id.calls[0].request.url
-        )
+    return handler
 
 
-def test_last_statement_year(token: str, transactions_text: str):
-    with respx.mock() as router:
-        last_statement = router.get(BASE_URL + f"lastStatement/{token}/statement").mock(
-            return_value=httpx.Response(200, text="2016,3")
-        )
-        by_id = router.get(
-            url__regex=re.escape(BASE_URL)
-            + rf"by-id/{token}/[^/]+/[^/]+/transactions\.json"
-        ).mock(return_value=httpx.Response(200, text=transactions_text))
-        client = FioBank(token, decimal=True)
+def test_last_statement(sync_client, token: str, transactions_text: str):
+    requests: list[httpx.Request] = []
+    client = sync_client(_statement_handler("2017,12", transactions_text, requests))
 
-        list(client.last_statement(2016))
+    transactions = list(client.last_statement())
 
-        assert dict(last_statement.calls[0].request.url.params) == {"year": "2016"}
-        assert f"by-id/{token}/2016/3/transactions.json" in str(
-            by_id.calls[0].request.url
-        )
+    assert len(transactions) > 0
+    # the last statement (2017/12) is fetched via the by-id endpoint
+    assert f"by-id/{token}/2017/12/transactions.json" in str(requests[-1].url)
 
 
-def test_last_statement_none(token: str):
-    with respx.mock() as router:
-        router.get(BASE_URL + f"lastStatement/{token}/statement").mock(
-            return_value=httpx.Response(200, text="null,null")
-        )
-        client = FioBank(token, decimal=True)
+def test_last_statement_year(sync_client, token: str, transactions_text: str):
+    requests: list[httpx.Request] = []
+    client = sync_client(_statement_handler("2016,3", transactions_text, requests))
 
-        with pytest.raises(ValueError, match="No data available"):
-            client.last_statement(2000)
+    list(client.last_statement(2016))
+
+    assert dict(requests[0].url.params) == {"year": "2016"}
+    assert f"by-id/{token}/2016/3/transactions.json" in str(requests[-1].url)
 
 
-def test_409_conflict(token: str, transactions_text: str):
-    with respx.mock() as router:
-        url = re.escape(BASE_URL) + rf"[^/]+/{token}/([^/]+/)*transactions\.json"
-        router.get(url__regex=url).mock(
-            side_effect=[
-                httpx.Response(409),
-                httpx.Response(200, text=transactions_text),
-            ]
-        )
-        client = FioBank(token, decimal=True)
-        transaction = next(client.last())
+def test_last_statement_none(sync_client):
+    client = sync_client(lambda request: httpx.Response(200, text="null,null"))
+
+    with pytest.raises(ValueError, match="No data available"):
+        client.last_statement(2000)
+
+
+def test_409_conflict(sync_client, transactions_text: str):
+    responses = [httpx.Response(409), httpx.Response(200, text=transactions_text)]
+    client = sync_client(lambda request: responses.pop(0))
+
+    transaction = next(client.last())
 
     assert transaction["amount"] == Decimal("-130.0")
 
@@ -557,39 +500,30 @@ def test_removed_schema_attributes(attr):
         getattr(client, attr)
 
 
-def test_http_error_with_token_redaction(token: str):
+def test_http_error_with_token_redaction(sync_client, token: str):
     response_body = f"Error occurred with token {token} in the response body"
+    client = sync_client(lambda request: httpx.Response(400, text=response_body))
 
-    with respx.mock() as router:
-        url = re.escape(BASE_URL) + rf"periods/{token}/[^/]+/[^/]+/transactions\.json"
-        router.get(url__regex=url).mock(
-            return_value=httpx.Response(400, text=response_body)
-        )
-        client = FioBank(token, decimal=True)
+    with pytest.raises(HTTPError) as exc_info:
+        list(client.period("2025-01-01", "2025-02-01"))
 
-        with pytest.raises(HTTPError) as exc_info:
-            list(client.period("2025-01-01", "2025-02-01"))
-
-        assert exc_info.value.status_code == 400
-        error_msg = str(exc_info.value)
-        # Token should be redacted from both URL and response body
-        assert token not in error_msg
-        assert "***TOKEN***" in error_msg
-        assert "Error occurred with token ***TOKEN*** in the response body" in error_msg
+    assert exc_info.value.status_code == 400
+    error_msg = str(exc_info.value)
+    # Token should be redacted from both URL and response body
+    assert token not in error_msg
+    assert "***TOKEN***" in error_msg
+    assert "Error occurred with token ***TOKEN*** in the response body" in error_msg
 
 
-def test_http_error_with_non_utf8_body(token: str):
+def test_http_error_with_non_utf8_body(sync_client):
     # An intermediary (proxy/WAF) may return a non-UTF-8 error body; that must
     # still surface as a clean HTTPError, not a UnicodeDecodeError crash.
-    with respx.mock() as router:
-        url = re.escape(BASE_URL) + rf"periods/{token}/[^/]+/[^/]+/transactions\.json"
-        router.get(url__regex=url).mock(
-            return_value=httpx.Response(502, content=b"\xff\xfe bad gateway")
-        )
-        client = FioBank(token, decimal=True)
+    client = sync_client(
+        lambda request: httpx.Response(502, content=b"\xff\xfe bad gateway")
+    )
 
-        with pytest.raises(HTTPError) as exc_info:
-            list(client.period("2025-01-01", "2025-02-01"))
+    with pytest.raises(HTTPError) as exc_info:
+        list(client.period("2025-01-01", "2025-02-01"))
 
-        assert exc_info.value.status_code == 502
-        assert "bad gateway" in str(exc_info.value)
+    assert exc_info.value.status_code == 502
+    assert "bad gateway" in str(exc_info.value)

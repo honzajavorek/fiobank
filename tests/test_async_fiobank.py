@@ -1,44 +1,17 @@
 from __future__ import annotations
 
-import os
-import re
-import uuid
 from datetime import date
 from decimal import Decimal
 
 import httpx
 import pytest
-import respx
 
 from fiobank import AsyncFioBank, HTTPError
 
 
-BASE_URL = "https://fioapi.fio.cz/v1/rest/"
-
-
 @pytest.fixture()
-def token() -> str:
-    return str(uuid.uuid4())
-
-
-@pytest.fixture()
-def transactions_text() -> str:
-    with open(os.path.dirname(__file__) + "/transactions.json") as f:
-        return f.read()
-
-
-@pytest.fixture()
-def client_decimal(token: str, transactions_text: str):
-    with respx.mock(assert_all_called=False) as router:
-        url = re.escape(BASE_URL) + rf"[^/]+/{token}/([^/]+/)*transactions\.json"
-        router.get(url__regex=url).mock(
-            return_value=httpx.Response(200, text=transactions_text)
-        )
-
-        url = re.escape(BASE_URL) + rf"set-last-\w+/{token}/[^/]+/"
-        router.get(url__regex=url).mock(return_value=httpx.Response(200))
-
-        yield AsyncFioBank(token, decimal=True)
+def client_decimal(async_client, transactions_handler) -> AsyncFioBank:
+    return async_client(transactions_handler, decimal=True)
 
 
 async def test_info(client_decimal: AsyncFioBank):
@@ -94,70 +67,51 @@ async def test_last_transactions(client_decimal: AsyncFioBank):
     assert info["balance"] == Decimal("2060.52")
 
 
-async def test_last_statement(token: str, transactions_text: str):
-    with respx.mock() as router:
-        router.get(BASE_URL + f"lastStatement/{token}/statement").mock(
-            return_value=httpx.Response(200, text="2017,12")
-        )
-        by_id = router.get(
-            url__regex=re.escape(BASE_URL)
-            + rf"by-id/{token}/[^/]+/[^/]+/transactions\.json"
-        ).mock(return_value=httpx.Response(200, text=transactions_text))
-        client = AsyncFioBank(token, decimal=True)
+async def test_last_statement(async_client, token: str, transactions_text: str):
+    requests: list[httpx.Request] = []
 
-        transactions = list(await client.last_statement())
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        if request.url.path.endswith("statement"):
+            return httpx.Response(200, text="2017,12")
+        return httpx.Response(200, text=transactions_text)
 
-        assert len(transactions) > 0
-        assert f"by-id/{token}/2017/12/transactions.json" in str(
-            by_id.calls[0].request.url
-        )
+    client = async_client(handler)
+
+    transactions = list(await client.last_statement())
+
+    assert len(transactions) > 0
+    assert f"by-id/{token}/2017/12/transactions.json" in str(requests[-1].url)
 
 
-async def test_last_statement_none(token: str):
-    with respx.mock() as router:
-        router.get(BASE_URL + f"lastStatement/{token}/statement").mock(
-            return_value=httpx.Response(200, text="null,null")
-        )
-        client = AsyncFioBank(token, decimal=True)
+async def test_last_statement_none(async_client):
+    client = async_client(lambda request: httpx.Response(200, text="null,null"))
 
-        with pytest.raises(ValueError, match="No data available"):
-            await client.last_statement(2000)
+    with pytest.raises(ValueError, match="No data available"):
+        await client.last_statement(2000)
 
 
-async def test_409_conflict(token: str, transactions_text: str):
-    with respx.mock() as router:
-        url = re.escape(BASE_URL) + rf"[^/]+/{token}/([^/]+/)*transactions\.json"
-        router.get(url__regex=url).mock(
-            side_effect=[
-                httpx.Response(409),
-                httpx.Response(200, text=transactions_text),
-            ]
-        )
-        client = AsyncFioBank(token, decimal=True)
-        transactions = await client.last()
-        transaction = next(transactions)
+async def test_409_conflict(async_client, transactions_text: str):
+    responses = [httpx.Response(409), httpx.Response(200, text=transactions_text)]
+    client = async_client(lambda request: responses.pop(0))
+
+    transaction = next(await client.last())
 
     assert transaction["amount"] == Decimal("-130.0")
 
 
-async def test_http_error_with_token_redaction(token: str):
+async def test_http_error_with_token_redaction(async_client, token: str):
     response_body = f"Error occurred with token {token} in the response body"
+    client = async_client(lambda request: httpx.Response(400, text=response_body))
 
-    with respx.mock() as router:
-        url = re.escape(BASE_URL) + rf"periods/{token}/[^/]+/[^/]+/transactions\.json"
-        router.get(url__regex=url).mock(
-            return_value=httpx.Response(400, text=response_body)
-        )
-        client = AsyncFioBank(token, decimal=True)
+    with pytest.raises(HTTPError) as exc_info:
+        await client.period("2025-01-01", "2025-02-01")
 
-        with pytest.raises(HTTPError) as exc_info:
-            await client.period("2025-01-01", "2025-02-01")
-
-        assert exc_info.value.status_code == 400
-        error_msg = str(exc_info.value)
-        assert token not in error_msg
-        assert "***TOKEN***" in error_msg
-        assert "Error occurred with token ***TOKEN*** in the response body" in error_msg
+    assert exc_info.value.status_code == 400
+    error_msg = str(exc_info.value)
+    assert token not in error_msg
+    assert "***TOKEN***" in error_msg
+    assert "Error occurred with token ***TOKEN*** in the response body" in error_msg
 
 
 async def test_last_conflicting_params():

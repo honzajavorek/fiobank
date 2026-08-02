@@ -130,8 +130,8 @@ By default ``FioBank`` talks to the API with `httpx
 <https://www.python-httpx.org/>`_ (``httpx.Client``) and ``AsyncFioBank``
 with ``httpx.AsyncClient``. Both accept a ``transport=`` argument, so you can
 plug in any HTTP client -- ``aiohttp``, ``urllib``, a caching or proxying
-layer, or a fake for tests. A transport does exactly one thing: GET a URL and
-return a status code plus the raw body bytes.
+layer, or a fake for tests. A transport does two things: GET a URL (returning
+a status code plus the raw body bytes) and ``close()`` itself.
 
 .. code:: python
 
@@ -143,21 +143,23 @@ return a status code plus the raw body bytes.
     ...         self.timeout = timeout
     ...         self.session = requests.Session()
     ...
-    ...     def get(self, url, params=None):
-    ...         r = self.session.get(url, params=params, timeout=self.timeout)
+    ...     def get(self, url):
+    ...         r = self.session.get(url, timeout=self.timeout)
     ...         return Response(r.status_code, r.content)
+    ...
+    ...     def close(self):
+    ...         self.session.close()
     ...
     >>> client = FioBank(token='...', decimal=True, transport=RequestsTransport())
 
 The synchronous ``Transport`` and asynchronous ``AsyncTransport`` protocols
-(both exported from ``fiobank``) describe the single ``get()`` method a custom
-transport needs to implement.
+(both exported from ``fiobank``) describe the ``get()`` and ``close()`` /
+``aclose()`` methods a custom transport needs to implement.
 
 The default transports keep a persistent HTTP client (a connection pool) open.
 Use the client as a context manager -- or call ``close()`` / ``await
 aclose()`` -- to release it deterministically instead of waiting for garbage
-collection. An HTTP client you inject yourself stays under your control and is
-never closed for you.
+collection.
 
 .. code:: python
 
