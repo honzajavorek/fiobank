@@ -7,8 +7,8 @@ authors = [{name = "Honza Javorek", email = "mail@honzajavorek.cz"}]
 license = {text = "ISC"}
 requires-python = "<4.0,>=3.9"
 dependencies = [
+    "httpx>=0.28",
     "pydantic>=2.0.0",
-    "requests<3.0.0,>=2.28.2",
     "tenacity>=9.0.0",
 ]
 classifiers = [
@@ -27,10 +27,10 @@ repository = "https://github.com/honzajavorek/fiobank"
 [dependency-groups]
 dev = [
     "mock>=5.0.1",
+    "pytest-asyncio>=0.24.0",
     "pytest-cov>=6.0.0",
     "pytest-ruff>=0.4.1",
     "pytest>=7.2.1",
-    "responses>=0.22.0",
     "ruff>=0.8.4",
 ]
 
@@ -38,6 +38,7 @@ dev = [
 pythonpath = ["."]
 testpaths = "tests"
 norecursedirs = "env venv .git"
+asyncio_mode = "auto"
 addopts = "--ff --ruff --ruff-format --cov=fiobank --cov-report=term-missing:skip-covered --cov-context=test"
 filterwarnings = ["ignore:Using float for money can cause inaccuracies:DeprecationWarning"]
 

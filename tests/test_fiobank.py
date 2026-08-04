@@ -1,19 +1,14 @@
 from __future__ import annotations
 
-import json
-import os
 import re
-import uuid
 from datetime import date
 from decimal import Decimal
 from unittest import mock
 
+import httpx
 import pytest
-import requests
-import responses
-from responses.registries import OrderedRegistry
 
-from fiobank import FioBank
+from fiobank import FioBank, HTTPError
 from fiobank.models import Transaction
 
 
@@ -21,48 +16,13 @@ BASE_URL = "https://fioapi.fio.cz/v1/rest/"
 
 
 @pytest.fixture()
-def token() -> str:
-    return str(uuid.uuid4())
+def client_float(sync_client, transactions_handler) -> FioBank:
+    return sync_client(transactions_handler, decimal=False)
 
 
 @pytest.fixture()
-def transactions_text() -> str:
-    with open(os.path.dirname(__file__) + "/transactions.json") as f:
-        return f.read()
-
-
-@pytest.fixture()
-def transactions_json() -> dict:
-    with open(os.path.dirname(__file__) + "/transactions.json") as f:
-        return json.load(f)
-
-
-@pytest.fixture()
-def client_float(token: str, transactions_text: str):
-    with responses.RequestsMock(assert_all_requests_are_fired=False) as resps:
-        url = re.compile(
-            re.escape(BASE_URL) + rf"[^/]+/{token}/([^/]+/)*transactions\.json"
-        )
-        resps.add(responses.GET, url, body=transactions_text)
-
-        url = re.compile(re.escape(BASE_URL) + rf"set-last-\w+/{token}/[^/]+/")
-        resps.add(responses.GET, url)
-
-        yield FioBank(token)
-
-
-@pytest.fixture()
-def client_decimal(token: str, transactions_text: str):
-    with responses.RequestsMock(assert_all_requests_are_fired=False) as resps:
-        url = re.compile(
-            re.escape(BASE_URL) + rf"[^/]+/{token}/([^/]+/)*transactions\.json"
-        )
-        resps.add(responses.GET, url, body=transactions_text)
-
-        url = re.compile(re.escape(BASE_URL) + rf"set-last-\w+/{token}/[^/]+/")
-        resps.add(responses.GET, url)
-
-        yield FioBank(token, decimal=True)
+def client_decimal(sync_client, transactions_handler) -> FioBank:
+    return sync_client(transactions_handler, decimal=True)
 
 
 def test_client_decimal(client_decimal: FioBank):
@@ -296,9 +256,9 @@ def test_transaction_schema_is_complete():
     # runtimes (e.g. AI agent coding environment). Skip cleanly there
     # rather than failing. CI has network access and runs the assertion.
     try:
-        response = requests.get("https://www.fio.cz/xsd/IBSchema.xsd", timeout=10)
+        response = httpx.get("https://www.fio.cz/xsd/IBSchema.xsd", timeout=10)
         response.raise_for_status()
-    except requests.RequestException as e:
+    except httpx.HTTPError as e:
         pytest.skip(f"www.fio.cz is not reachable from this runtime: {e}")
 
     columns_in_xsd = set()
@@ -486,73 +446,49 @@ def test_transactions_parse_no_account_number_full(transactions_json):
     assert sdk_transaction["account_number_full"] is None
 
 
-def test_last_statement(token: str, transactions_text: str):
-    with responses.RequestsMock() as resps:
-        resps.add(
-            responses.GET,
-            BASE_URL + f"lastStatement/{token}/statement",
-            body="2017,12",
-        )
-        resps.add(
-            responses.GET,
-            re.compile(
-                re.escape(BASE_URL) + rf"by-id/{token}/[^/]+/[^/]+/transactions\.json"
-            ),
-            body=transactions_text,
-        )
-        client = FioBank(token, decimal=True)
+def _statement_handler(number_text: str, transactions_text: str, requests: list):
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        if request.url.path.endswith("statement"):
+            return httpx.Response(200, text=number_text)
+        return httpx.Response(200, text=transactions_text)
 
-        transactions = list(client.last_statement())
-
-        assert len(transactions) > 0
-        # the last statement (2017/12) is fetched via the by-id endpoint
-        assert f"by-id/{token}/2017/12/transactions.json" in resps.calls[1].request.url
+    return handler
 
 
-def test_last_statement_year(token: str, transactions_text: str):
-    with responses.RequestsMock() as resps:
-        resps.add(
-            responses.GET,
-            BASE_URL + f"lastStatement/{token}/statement",
-            body="2016,3",
-        )
-        resps.add(
-            responses.GET,
-            re.compile(
-                re.escape(BASE_URL) + rf"by-id/{token}/[^/]+/[^/]+/transactions\.json"
-            ),
-            body=transactions_text,
-        )
-        client = FioBank(token, decimal=True)
+def test_last_statement(sync_client, token: str, transactions_text: str):
+    requests: list[httpx.Request] = []
+    client = sync_client(_statement_handler("2017,12", transactions_text, requests))
 
-        list(client.last_statement(2016))
+    transactions = list(client.last_statement())
 
-        assert resps.calls[0].request.params == {"year": "2016"}
-        assert f"by-id/{token}/2016/3/transactions.json" in resps.calls[1].request.url
+    assert len(transactions) > 0
+    # the last statement (2017/12) is fetched via the by-id endpoint
+    assert f"by-id/{token}/2017/12/transactions.json" in str(requests[-1].url)
 
 
-def test_last_statement_none(token: str):
-    with responses.RequestsMock() as resps:
-        resps.add(
-            responses.GET,
-            BASE_URL + f"lastStatement/{token}/statement",
-            body="null,null",
-        )
-        client = FioBank(token, decimal=True)
+def test_last_statement_year(sync_client, token: str, transactions_text: str):
+    requests: list[httpx.Request] = []
+    client = sync_client(_statement_handler("2016,3", transactions_text, requests))
 
-        with pytest.raises(ValueError, match="No data available"):
-            client.last_statement(2000)
+    list(client.last_statement(2016))
+
+    assert dict(requests[0].url.params) == {"year": "2016"}
+    assert f"by-id/{token}/2016/3/transactions.json" in str(requests[-1].url)
 
 
-def test_409_conflict(token: str, transactions_text: str):
-    with responses.RequestsMock(registry=OrderedRegistry) as resps:
-        url = re.compile(
-            re.escape(BASE_URL) + rf"[^/]+/{token}/([^/]+/)*transactions\.json"
-        )
-        resps.add(responses.GET, url, status=409)
-        resps.add(responses.GET, url, body=transactions_text)
-        client = FioBank(token, decimal=True)
-        transaction = next(client.last())
+def test_last_statement_none(sync_client):
+    client = sync_client(lambda request: httpx.Response(200, text="null,null"))
+
+    with pytest.raises(ValueError, match="No data available"):
+        client.last_statement(2000)
+
+
+def test_409_conflict(sync_client, transactions_text: str):
+    responses = [httpx.Response(409), httpx.Response(200, text=transactions_text)]
+    client = sync_client(lambda request: responses.pop(0))
+
+    transaction = next(client.last())
 
     assert transaction["amount"] == Decimal("-130.0")
 
@@ -564,21 +500,30 @@ def test_removed_schema_attributes(attr):
         getattr(client, attr)
 
 
-def test_http_error_with_token_redaction(token: str):
+def test_http_error_with_token_redaction(sync_client, token: str):
     response_body = f"Error occurred with token {token} in the response body"
+    client = sync_client(lambda request: httpx.Response(400, text=response_body))
 
-    with responses.RequestsMock() as resps:
-        url = re.compile(
-            re.escape(BASE_URL) + rf"periods/{token}/[^/]+/[^/]+/transactions\.json"
-        )
-        resps.add(responses.GET, url, status=400, body=response_body)
-        client = FioBank(token, decimal=True)
+    with pytest.raises(HTTPError) as exc_info:
+        list(client.period("2025-01-01", "2025-02-01"))
 
-        with pytest.raises(requests.HTTPError) as exc_info:
-            list(client.period("2025-01-01", "2025-02-01"))
+    assert exc_info.value.status_code == 400
+    error_msg = str(exc_info.value)
+    # Token should be redacted from both URL and response body
+    assert token not in error_msg
+    assert "***TOKEN***" in error_msg
+    assert "Error occurred with token ***TOKEN*** in the response body" in error_msg
 
-        error_msg = str(exc_info.value)
-        # Token should be redacted from both URL and response body
-        assert token not in error_msg
-        assert "***TOKEN***" in error_msg
-        assert "Error occurred with token ***TOKEN*** in the response body" in error_msg
+
+def test_http_error_with_non_utf8_body(sync_client):
+    # An intermediary (proxy/WAF) may return a non-UTF-8 error body; that must
+    # still surface as a clean HTTPError, not a UnicodeDecodeError crash.
+    client = sync_client(
+        lambda request: httpx.Response(502, content=b"\xff\xfe bad gateway")
+    )
+
+    with pytest.raises(HTTPError) as exc_info:
+        list(client.period("2025-01-01", "2025-02-01"))
+
+    assert exc_info.value.status_code == 502
+    assert "bad gateway" in str(exc_info.value)
