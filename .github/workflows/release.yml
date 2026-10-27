@@ -14,7 +14,7 @@ jobs:
           fetch-depth: 0
 
       - name: Build and inspect package
-        uses: hynek/build-and-inspect-python-package@v3.0.1
+        uses: hynek/build-and-inspect-python-package@v3.0.2
 
   smoke-test:
     needs: build
